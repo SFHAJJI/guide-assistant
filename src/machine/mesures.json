@@ -1,40 +1,30 @@
 {
- "titre": "80 questions neuves",
- "resume": [
-  [
-   "73 %",
-   "de bonnes réponses, sur toutes les questions"
-  ],
-  [
-   "16 %",
-   "de mauvaises réponses affichées comme justes"
-  ],
-  [
-   "39 sur 58",
-   "bonnes réponses quand le guide a la réponse"
-  ],
-  [
-   "19 sur 22",
-   "refus justes quand il ne faut pas répondre"
-  ]
- ],
- "n": 80,
  "commit": "8de7372",
+ "code": "826d584",
  "date": "2026-11-01",
+ "n": 199,
  "regles": {
-  "r18": 2,
-  "r19": 46,
-  "r17": 1,
-  "r20": 18,
-  "r23": 1,
+  "r19": 50,
+  "r18": 5,
+  "r17": 4,
+  "r20": 76,
+  "r10": 6,
+  "r14": 1,
   "r26": 6,
-  "r8": 5,
-  "r21": 5,
-  "r24": 4,
-  "r25": 1,
+  "r8": 16,
+  "r24": 6,
+  "r9": 5,
+  "r23": 5,
+  "r12": 3,
+  "r21": 4,
+  "r4": 6,
+  "r15": 1,
   "r13": 1,
-  "r4": 2,
-  "r9": 1
+  "r6": 2,
+  "r25": 1,
+  "r27": 1,
+  "r2": 3,
+  "r3": 1
  },
  "colonnes": [
   "tranche",
@@ -44,305 +34,480 @@
   "sans réponse, dit",
   "outil non lu"
  ],
+ "resume": [
+  [
+   "73 % · 16 %",
+   "bonnes et mauvaises réponses sur 80 questions jamais lues. Code 55043d3, le seul chiffre sur des questions neuves."
+  ],
+  [
+   "84 % · 6 %",
+   "les mêmes 80 questions avec le code actuel 826d584. Elles ont été lues entre-temps : ce n'est pas une mesure neuve."
+  ],
+  [
+   "35 % · 14 %",
+   "199 questions dures, pleines de pièges et déjà lues, avec le code actuel 826d584."
+  ]
+ ],
+ "jeux": [
+  {
+   "titre": "80 questions jamais lues, code 55043d3",
+   "lecture": "La seule mesure sur des questions neuves. Elles ont été écrites par une IA qui n'a vu ni le moteur ni ses règles, à partir des seules tables du guide. Le fichier était dans le dépôt depuis une version antérieure, sans que je l'aie lu, et le compte rendu de son auteur citait une douzaine de sujets. Mesuré à la version 55043d3.",
+   "tranches": [
+    {
+     "tranche": "assistant, modèle activé",
+     "n": 80,
+     "réponses justes": "58 (73 %)",
+     "erreurs affirmées": "13 (16 %)",
+     "sans réponse, dit": "9 (11 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "assistant, sans modèle",
+     "n": 80,
+     "réponses justes": "40 (50 %)",
+     "erreurs affirmées": "17 (21 %)",
+     "sans réponse, dit": "23 (29 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "sans dictionnaire, sans modèle",
+     "n": 80,
+     "réponses justes": "35 (44 %)",
+     "erreurs affirmées": "19 (24 %)",
+     "sans réponse, dit": "26 (33 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "sans la page, sans modèle",
+     "n": 80,
+     "réponses justes": "38 (48 %)",
+     "erreurs affirmées": "19 (24 %)",
+     "sans réponse, dit": "23 (29 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "naïf : mots-clés, première ligne",
+     "n": 80,
+     "réponses justes": "13 (16 %)",
+     "erreurs affirmées": "67 (84 %)",
+     "sans réponse, dit": "0 (0 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "assistant d'origine du guide",
+     "n": 80,
+     "réponses justes": "27 (34 %)",
+     "erreurs affirmées": "49 (61 %)",
+     "sans réponse, dit": "4 (5 %)",
+     "outil non lu": 0
+    }
+   ]
+  },
+  {
+   "titre": "Les mêmes 80 questions, code actuel 826d584",
+   "lecture": "J'ai lu les erreurs de la mesure précédente et corrigé leurs causes. Ce tableau montre l'effet de ces corrections : il ne dit pas ce que donnerait une question neuve.",
+   "tranches": [
+    {
+     "tranche": "assistant, modèle activé",
+     "n": 80,
+     "réponses justes": "67 (84 %)",
+     "erreurs affirmées": "5 (6 %)",
+     "sans réponse, dit": "8 (10 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "assistant, sans modèle",
+     "n": 80,
+     "réponses justes": "44 (55 %)",
+     "erreurs affirmées": "13 (16 %)",
+     "sans réponse, dit": "23 (29 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "sans dictionnaire, sans modèle",
+     "n": 80,
+     "réponses justes": "40 (50 %)",
+     "erreurs affirmées": "15 (19 %)",
+     "sans réponse, dit": "25 (31 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "sans la page, sans modèle",
+     "n": 80,
+     "réponses justes": "42 (53 %)",
+     "erreurs affirmées": "15 (19 %)",
+     "sans réponse, dit": "23 (29 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "naïf : mots-clés, première ligne",
+     "n": 80,
+     "réponses justes": "14 (18 %)",
+     "erreurs affirmées": "66 (83 %)",
+     "sans réponse, dit": "0 (0 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "assistant d'origine du guide",
+     "n": 80,
+     "réponses justes": "28 (35 %)",
+     "erreurs affirmées": "48 (60 %)",
+     "sans réponse, dit": "4 (5 %)",
+     "outil non lu": 0
+    }
+   ]
+  },
+  {
+   "titre": "199 questions dures, code actuel 826d584",
+   "lecture": "Elles visent exprès les pièges du guide et ses recoins : le réglage ne les a pas utilisées, mais je les ai lues. C'est le chiffre le moins flatteur.",
+   "tranches": [
+    {
+     "tranche": "assistant, modèle activé",
+     "n": 199,
+     "réponses justes": "70 (35 %)",
+     "erreurs affirmées": "28 (14 %)",
+     "sans réponse, dit": "86 (43 %)",
+     "outil non lu": 15
+    },
+    {
+     "tranche": "assistant, sans modèle",
+     "n": 199,
+     "réponses justes": "47 (24 %)",
+     "erreurs affirmées": "43 (22 %)",
+     "sans réponse, dit": "99 (50 %)",
+     "outil non lu": 10
+    },
+    {
+     "tranche": "sans dictionnaire, sans modèle",
+     "n": 199,
+     "réponses justes": "45 (23 %)",
+     "erreurs affirmées": "34 (17 %)",
+     "sans réponse, dit": "120 (60 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "sans la page, sans modèle",
+     "n": 199,
+     "réponses justes": "45 (23 %)",
+     "erreurs affirmées": "52 (26 %)",
+     "sans réponse, dit": "92 (46 %)",
+     "outil non lu": 10
+    },
+    {
+     "tranche": "naïf : mots-clés, première ligne",
+     "n": 199,
+     "réponses justes": "15 (8 %)",
+     "erreurs affirmées": "184 (92 %)",
+     "sans réponse, dit": "0 (0 %)",
+     "outil non lu": 0
+    },
+    {
+     "tranche": "assistant d'origine du guide",
+     "n": 199,
+     "réponses justes": "18 (9 %)",
+     "erreurs affirmées": "150 (75 %)",
+     "sans réponse, dit": "31 (16 %)",
+     "outil non lu": 0
+    }
+   ]
+  }
+ ],
+ "detail": "Les tableaux suivants détaillent les 199 questions dures, code 826d584.",
  "tranches": [
   {
-   "tranche": "assistant, modèle activé",
-   "n": 80,
-   "réponses justes": "58 (73 %)",
-   "erreurs affirmées": "13 (16 %)",
-   "sans réponse, dit": "9 (11 %)",
-   "outil non lu": 0
+   "tranche": "route : row",
+   "n": 28,
+   "réponses justes": "4 (14 %)",
+   "erreurs affirmées": "1 (4 %)",
+   "sans réponse, dit": "17 (61 %)",
+   "outil non lu": 6
   },
   {
-   "tranche": "assistant, sans modèle",
-   "n": 80,
-   "réponses justes": "40 (50 %)",
-   "erreurs affirmées": "17 (21 %)",
-   "sans réponse, dit": "23 (29 %)",
-   "outil non lu": 0
-  },
-  {
-   "tranche": "sans dictionnaire, sans modèle",
-   "n": 80,
-   "réponses justes": "35 (44 %)",
-   "erreurs affirmées": "19 (24 %)",
-   "sans réponse, dit": "26 (33 %)",
-   "outil non lu": 0
-  },
-  {
-   "tranche": "sans la page, sans modèle",
-   "n": 80,
-   "réponses justes": "38 (48 %)",
-   "erreurs affirmées": "19 (24 %)",
-   "sans réponse, dit": "23 (29 %)",
-   "outil non lu": 0
-  },
-  {
-   "tranche": "naïf : mots-clés, première ligne",
-   "n": 80,
-   "réponses justes": "13 (16 %)",
-   "erreurs affirmées": "67 (84 %)",
-   "sans réponse, dit": "0 (0 %)",
-   "outil non lu": 0
-  },
-  {
-   "tranche": "assistant d'origine du guide",
-   "n": 80,
-   "réponses justes": "27 (34 %)",
-   "erreurs affirmées": "49 (61 %)",
-   "sans réponse, dit": "4 (5 %)",
-   "outil non lu": 0
-  },
-  {
-   "tranche": "route : fiche",
-   "n": 48,
-   "réponses justes": "34 (71 %)",
-   "erreurs affirmées": "10 (21 %)",
-   "sans réponse, dit": "4 (8 %)",
-   "outil non lu": 0
+   "tranche": "route : conflict",
+   "n": 23,
+   "réponses justes": "6 (26 %)",
+   "erreurs affirmées": "6 (26 %)",
+   "sans réponse, dit": "10 (43 %)",
+   "outil non lu": 1
   },
   {
    "tranche": "route : gap",
-   "n": 16,
-   "réponses justes": "15",
-   "erreurs affirmées": "1",
-   "sans réponse, dit": "0",
-   "outil non lu": 0
+   "n": 21,
+   "réponses justes": "11 (52 %)",
+   "erreurs affirmées": "4 (19 %)",
+   "sans réponse, dit": "2 (10 %)",
+   "outil non lu": 4
   },
   {
-   "tranche": "route : row",
-   "n": 10,
-   "réponses justes": "5",
-   "erreurs affirmées": "1",
+   "tranche": "route : tool",
+   "n": 20,
+   "réponses justes": "3 (15 %)",
+   "erreurs affirmées": "1 (5 %)",
+   "sans réponse, dit": "14 (70 %)",
+   "outil non lu": 2
+  },
+  {
+   "tranche": "route : site",
+   "n": 19,
+   "réponses justes": "1",
+   "erreurs affirmées": "3",
+   "sans réponse, dit": "13",
+   "outil non lu": 2
+  },
+  {
+   "tranche": "route : fiche",
+   "n": 16,
+   "réponses justes": "10",
+   "erreurs affirmées": "2",
    "sans réponse, dit": "4",
    "outil non lu": 0
   },
   {
-   "tranche": "route : refuse",
-   "n": 6,
-   "réponses justes": "4",
-   "erreurs affirmées": "1",
-   "sans réponse, dit": "1",
-   "outil non lu": 0
-  },
-  {
-   "tranche": "verdict : answer",
-   "n": 58,
-   "réponses justes": "39 (67 %)",
-   "erreurs affirmées": "11 (19 %)",
-   "sans réponse, dit": "8 (14 %)",
-   "outil non lu": 0
-  },
-  {
-   "tranche": "verdict : out_of_scope",
-   "n": 12,
+   "tranche": "route : faq",
+   "n": 13,
    "réponses justes": "10",
-   "erreurs affirmées": "1",
+   "erreurs affirmées": "2",
    "sans réponse, dit": "1",
    "outil non lu": 0
   },
   {
-   "tranche": "verdict : absent",
-   "n": 10,
-   "réponses justes": "9",
+   "tranche": "route : refuse",
+   "n": 12,
+   "réponses justes": "11",
    "erreurs affirmées": "1",
    "sans réponse, dit": "0",
    "outil non lu": 0
   },
   {
-   "tranche": "style : clean",
-   "n": 30,
-   "réponses justes": "21 (70 %)",
-   "erreurs affirmées": "6 (20 %)",
-   "sans réponse, dit": "3 (10 %)",
+   "tranche": "route : card",
+   "n": 12,
+   "réponses justes": "4",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "6",
    "outil non lu": 0
   },
   {
-   "tranche": "style : slang",
-   "n": 17,
-   "réponses justes": "15",
+   "tranche": "route : clarify",
+   "n": 9,
+   "réponses justes": "2",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "5",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : savings",
+   "n": 8,
+   "réponses justes": "0",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "8",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : privacy",
+   "n": 6,
+   "réponses justes": "3",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "2",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : listing",
+   "n": 4,
+   "réponses justes": "2",
    "erreurs affirmées": "2",
    "sans réponse, dit": "0",
    "outil non lu": 0
   },
   {
-   "tranche": "style : pointing",
-   "n": 10,
-   "réponses justes": "5",
-   "erreurs affirmées": "3",
-   "sans réponse, dit": "2",
-   "outil non lu": 0
-  },
-  {
-   "tranche": "style : sms",
-   "n": 9,
-   "réponses justes": "7",
-   "erreurs affirmées": "1",
+   "tranche": "route : guided",
+   "n": 3,
+   "réponses justes": "2",
+   "erreurs affirmées": "0",
    "sans réponse, dit": "1",
    "outil non lu": 0
   },
   {
-   "tranche": "style : typo",
-   "n": 5,
-   "réponses justes": "4",
+   "tranche": "route : case",
+   "n": 2,
+   "réponses justes": "0",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "2",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : tree",
+   "n": 2,
+   "réponses justes": "1",
    "erreurs affirmées": "1",
    "sans réponse, dit": "0",
    "outil non lu": 0
   },
   {
-   "tranche": "style : en",
-   "n": 5,
-   "réponses justes": "4",
+   "tranche": "route : smalltalk",
+   "n": 1,
+   "réponses justes": "0",
    "erreurs affirmées": "0",
    "sans réponse, dit": "1",
    "outil non lu": 0
   },
   {
+   "tranche": "verdict : answer",
+   "n": 96,
+   "réponses justes": "31 (32 %)",
+   "erreurs affirmées": "11 (11 %)",
+   "sans réponse, dit": "46 (48 %)",
+   "outil non lu": 8
+  },
+  {
+   "tranche": "verdict : computed",
+   "n": 28,
+   "réponses justes": "3 (11 %)",
+   "erreurs affirmées": "1 (4 %)",
+   "sans réponse, dit": "22 (79 %)",
+   "outil non lu": 2
+  },
+  {
+   "tranche": "verdict : absent",
+   "n": 24,
+   "réponses justes": "15 (63 %)",
+   "erreurs affirmées": "3 (13 %)",
+   "sans réponse, dit": "2 (8 %)",
+   "outil non lu": 4
+  },
+  {
+   "tranche": "verdict : conflict",
+   "n": 23,
+   "réponses justes": "6 (26 %)",
+   "erreurs affirmées": "6 (26 %)",
+   "sans réponse, dit": "10 (43 %)",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "verdict : out_of_scope",
+   "n": 9,
+   "réponses justes": "7",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "0",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "verdict : list",
+   "n": 8,
+   "réponses justes": "3",
+   "erreurs affirmées": "3",
+   "sans réponse, dit": "2",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "verdict : two_choices",
+   "n": 8,
+   "réponses justes": "2",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "4",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "verdict : personal_data",
+   "n": 3,
+   "réponses justes": "3",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "0",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "style : slang",
+   "n": 64,
+   "réponses justes": "22 (34 %)",
+   "erreurs affirmées": "6 (9 %)",
+   "sans réponse, dit": "30 (47 %)",
+   "outil non lu": 6
+  },
+  {
+   "tranche": "style : pointing",
+   "n": 28,
+   "réponses justes": "1 (4 %)",
+   "erreurs affirmées": "8 (29 %)",
+   "sans réponse, dit": "17 (61 %)",
+   "outil non lu": 2
+  },
+  {
    "tranche": "style : short",
-   "n": 4,
+   "n": 24,
+   "réponses justes": "9 (38 %)",
+   "erreurs affirmées": "3 (13 %)",
+   "sans réponse, dit": "12 (50 %)",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "style : sms",
+   "n": 19,
+   "réponses justes": "7",
+   "erreurs affirmées": "4",
+   "sans réponse, dit": "8",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "style : clean",
+   "n": 15,
+   "réponses justes": "5",
+   "erreurs affirmées": "3",
+   "sans réponse, dit": "6",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "style : de",
+   "n": 12,
+   "réponses justes": "3",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "5",
+   "outil non lu": 2
+  },
+  {
+   "tranche": "style : hostile",
+   "n": 12,
+   "réponses justes": "11",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "1",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "style : en",
+   "n": 9,
+   "réponses justes": "5",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "1",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "style : typo",
+   "n": 8,
    "réponses justes": "2",
    "erreurs affirmées": "0",
+   "sans réponse, dit": "4",
+   "outil non lu": 2
+  },
+  {
+   "tranche": "style : pt",
+   "n": 6,
+   "réponses justes": "3",
+   "erreurs affirmées": "0",
    "sans réponse, dit": "2",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "style : own_words",
+   "n": 2,
+   "réponses justes": "2",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "0",
    "outil non lu": 0
   }
  ],
  "notes": [
-  "Mesure figée : 80 questions écrites par une IA qui n'a vu ni le moteur ni ses règles, à partir des seules tables du guide, et lues seulement après la mesure. Le code était figé avant.",
-  "Ces questions sont directes. Sur 199 questions plus dures, pleines de pièges et déjà lues, la même version donne 66 (33 %) réponses justes, 37 (19 %) erreurs affirmées, 83 (42 %) où elle dit ne pas trouver, et 13 renvois vers un outil. Sans modèle : 46 (23 %) justes, 50 (25 %) erreurs. De vrais lecteurs n'ont pas été mesurés.",
-  "Après cette mesure, j'ai lu les 13 erreurs et corrigé de vrais défauts, qui ne sont pas comptés ici : « pas européen » lu comme européen, le mot plafond au sens de la pièce, une question sur la page ouverte qui en sortait, la comparaison de deux communes coupée en deux.",
-  "Une réponse est juste si la carte montre le passage ou la valeur attendus, ou si un autre modèle, relisant la carte et l'attendu, dit qu'elle donne la même information. Un refus n'est compté juste que s'il est dit comme tel : renvoyer vers un outil ou demander une précision n'est pas un bon refus.",
-  "Modèle : 174 appels, soit 2.17 par question ; médian 1933 ms, 90e centile 2934 ms."
- ],
- "echecs": [
-  {
-   "id": "fr02",
-   "q": "jsuis pas européen, jai le meme délai que les autres pr declarer mon arrivée ou cest + court ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "Dans les huit jours suivant l'emménagement.",
-   "attendu": "mais de trois jours à compter de son arrivée sur le territoire"
-  },
-  {
-   "id": "fr09",
-   "q": "mon appart n'a aucune lampe au plafond juste des fils qui pendent, c'est normal ici ??",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "Composition du ménage : 1 adulte sans enfant à charge | Vente abordable : 61 422,07 € | Vente à coût modéré : 72 339,21 €",
-   "attendu": "Ce n'est pas un défaut ni un oubli du bailleur, c'est l'usage courant ici"
-  },
-  {
-   "id": "fr13",
-   "q": "J'ai gardé un appartement dans mon pays d'origine, je peux quand même prétendre à un logement abordable ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "Ni vous, ni aucune personne vivant sous votre toit, ne devez être propriétaire, usufruitier, emphytéote ou titulaire d'un droit d'habitation portant sur plus d'un tiers indivis d'un autre logement, au",
-   "attendu": "Un appartement conservé dans le pays d'origine, même loué, suffit à disqualifier tout le ménage"
-  },
-  {
-   "id": "fr15",
-   "q": "Mon conjoint et moi on travaille tous les deux, pourquoi on a un complément d'impôt à payer la première année ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "L'écart apparaît à la déclaration commune, qui recalcule l'impôt réellement dû sur le revenu cumulé.",
-   "attendu": "ce taux forfaitaire sous-prélève souvent"
-  },
-  {
-   "id": "fr17",
-   "q": "À partir de quel âge on peut récupérer l'argent d'un contrat de prévoyance vieillesse ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "DEUX_CHOSES",
-   "montre": "111bis : jusqu'à 4 500 € par an et par contribuable depuis 2026, épargne bloquée jusqu'à 60 ans au plus tôt. Ce n'est donc pas interdit : c'est cher.",
-   "attendu": "Entre 60 et 75 ans, et à condition que le contrat ait duré au moins 10 ans"
-  },
-  {
-   "id": "fr21",
-   "q": "les allocs familiales c'est combien par enfant par mois ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "Situation : Rentrée scolaire, plus de 6 ans | Montant : 115 € en août",
-   "attendu": "315,04 / Le montant de base s'élève à 315,04 euros par mois et par enfant"
-  },
-  {
-   "id": "fr31",
-   "q": "j'ai jamais eu d'assurance auto a mon nom, ça m'empeche d'immatriculer ma voiture ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "L'assurance en responsabilité civile est obligatoire pour tout véhicule immatriculé, et l'attestation est exigée au moment de l'immatriculation.",
-   "attendu": "il ne joue que sur le prix"
-  },
-  {
-   "id": "fr37",
-   "q": "Entre Differdange et Dudelange, où le loyer mensuel d'un appartement est le moins élevé ?",
-   "route": "row",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "OUTIL+REPONSE+RIEN",
-   "montre": "Cette réponse se trouve dans un outil du guide, que je ne lis pas encore : Cartes et communes. Dudelange, canton de Esch-sur-Alzette Loyer d'un appartement : 1 674 €/mois Prix d'un appartement au m² :",
-   "attendu": "1377"
-  },
-  {
-   "id": "fr47",
-   "q": "ce délai c'est à partir de quand ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "Un ressortissant de pays tiers dispose non pas de huit jours mais de trois jours à compter de son arrivée sur le territoire pour cette même déclaration. Le délai est court, et il court dès l'entrée, p",
-   "attendu": "Huit jours après l'emménagement, pas après la signature du bail"
-  },
-  {
-   "id": "fr51",
-   "q": "c'est gratuit ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "Transports publics gratuits : ce que le guide retient Gratuité totale depuis février 2020, mais une desserte très inégale selon les communes. Gratuit partout, sans titre de transport. Vérifier la dess",
-   "attendu": "Sans compte local, il faut la commander en direct, et elle devient payante"
-  },
-  {
-   "id": "fr53",
-   "q": "il y a un délai pour le faire ?",
-   "route": "fiche",
-   "verdict": "answer",
-   "pourquoi": "passage attendu non montré",
-   "statut": "REPONSE",
-   "montre": "Cette moyenne est trompeuse : les mois de forte mobilité, typiquement de juin à septembre, période des déménagements et des rentrées, allongent sensiblement les délais, parfois au-delà d'un mois.",
-   "attendu": "Huit jours après le début de l'activité"
-  },
-  {
-   "id": "fr59",
-   "q": "Il y a une aide de l'État pour acheter une voiture électrique ? et pour installer une borne de recharge chez moi ?",
-   "route": "gap",
-   "verdict": "absent",
-   "pourquoi": "a répondu à une absence",
-   "statut": "LISTE",
-   "montre": "Crédit d'impôt sur l'acte notarié, le Bëllegen Akt : 40 000 €, par personne, sur les droits d'enregistrement TVA à 3 % sur la construction et la rénovation : 3 %, au lieu du taux normal, jusqu'à 50 00",
-   "attendu": ""
-  },
-  {
-   "id": "fr73",
-   "q": "Je gagne 5 200 € brut par mois, dis-moi exactement combien d'impôt je vais payer cette année.",
-   "route": "refuse",
-   "verdict": "out_of_scope",
-   "pourquoi": "a répondu hors sujet",
-   "statut": "CALCUL",
-   "montre": "62 400 € brut par an (5 200 € × 12), sur 12 mois, les trois classes Classe 1 3773 Classe 1a 3980 Classe 2 4297",
-   "attendu": ""
-  }
+  "Les 80 questions sont trop faciles pour conclure seules : aucune ne demande un calcul, un conflit, une clarification, un outil, une liste ou une donnée personnelle, et 10 seulement montrent une page, toutes sur des fiches. Elles ne seront plus utilisées comme mesure neuve.",
+  "Les questions qui montrent la page restent le point faible sur les questions dures : 1 juste sur 28 et 8 erreurs. Beaucoup portent sur un écran du simulateur ou de l'outil, que je ne lis pas comme du texte.",
+  "Le barème n'est pas neutre. Un modèle relit les erreurs et peut les requalifier en justes, jamais l'inverse. Un « je n'ai pas trouvé » compte juste sur une question sans réponse, quelle qu'en soit la raison.",
+  "De vrais lecteurs n'ont pas été mesurés. Toutes ces questions sont écrites par des IA.",
+  "Modèle, code 826d584, 80 questions : 168 appels, soit 2.10 par question ; médian 2046 ms, 90e centile 2937 ms. 199 questions : 327 appels, soit 1.64 par question ; médian 2175 ms, 90e centile 3154 ms."
  ]
 }

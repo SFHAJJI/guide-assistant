@@ -166,14 +166,21 @@ async function mesures() {
     m.resume.forEach(([v, t]) => { const d = el("div", "chiffre"); d.appendChild(el("b", null, v)); d.appendChild(el("span", null, t)); c.appendChild(d); });
     vue.appendChild(c);
   }
-  vue.appendChild(el("p", "note", `${m.n} questions, version ${m.commit}, ${m.date}. Réponses justes et erreurs affirmées vont par paire : refuser tout donnerait zéro erreur. Un pourcentage n'apparaît qu'à partir de 20 questions.`));
+  vue.appendChild(el("p", "note", "Réponses justes et erreurs affirmées vont par paire : refuser tout donnerait zéro erreur. Chaque chiffre nomme la version du code qu'il a mesurée. Un pourcentage n'apparaît qu'à partir de 20 questions."));
+  const ligneDe = (t, cle) => { const o = { "": cle ? (LIBELLES[cle][t.tranche.split(" : ")[1]] || t.tranche.split(" : ")[1]) : t.tranche, Questions: t.n }; for (const [a, b] of Object.entries(COLS)) o[b] = t[a]; return o; };
+  (m.jeux || []).forEach(j => {
+    vue.appendChild(el("h2", null, j.titre));
+    vue.appendChild(el("p", "note", j.lecture));
+    const f = el("div", "cadre"); f.appendChild(table(j.tranches.map(t => ligneDe(t, null)), ["", "Questions", ...Object.values(COLS)])); vue.appendChild(f);
+  });
   const grp = (titre, cle) => {
-    const rows = m.tranches.filter(t => (cle ? t.tranche.startsWith(cle + " : ") : !/^(route|verdict|style) : /.test(t.tranche))).map(t => { const o = { "": cle ? (LIBELLES[cle][t.tranche.split(" : ")[1]] || t.tranche.split(" : ")[1]) : t.tranche, Questions: t.n }; for (const [a, b] of Object.entries(COLS)) o[b] = t[a]; return o; });
+    const rows = m.tranches.filter(t => (cle ? t.tranche.startsWith(cle + " : ") : !/^(route|verdict|style) : /.test(t.tranche))).map(t => ligneDe(t, cle));
     if (!rows.length) return;
     vue.appendChild(el("h2", null, titre));
     const f = el("div", "cadre"); f.appendChild(table(rows, ["", "Questions", ...Object.values(COLS)])); vue.appendChild(f);
   };
-  grp("Ce que chaque pièce apporte", null);
+  if (!m.jeux) grp("Ce que chaque pièce apporte", null);
+  if (m.detail) vue.appendChild(el("p", "note", m.detail));
   grp("Selon ce que la question attend", "verdict");
   grp("Selon la façon de demander", "style");
   grp("Selon le sujet", "route");

@@ -17,7 +17,7 @@ The model never writes the answer's sentence. It only writes search terms, the r
 | 3. Retrieval as a filter | Pick the route, then the passage | Every question | Code picks; models rank and check | [`decide.js`](src/assistant/decide.js), [`recherche.js`](src/assistant/recherche.js) |
 | 4. Generation | Build a typed answer from the guide's own lines | Every question | Code; model only for a yes/no label | [`reponse.js`](src/assistant/reponse.js) |
 
-[`moteur.js`](src/assistant/moteur.js) wires them together in about 150 lines. [`texte.js`](src/assistant/texte.js) holds the shared text helpers.
+[`moteur.js`](src/assistant/moteur.js) wires them together in about 150 lines. [`texte.js`](src/assistant/texte.js) holds the shared text helpers. This is one file per brick, not separate packages: they share a browser namespace, depend on load order, and the tests run through the whole engine.
 
 ### 1. Document parsing
 
@@ -56,7 +56,7 @@ The question becomes a row with named fields, visible as JSON in the trace.
 
 Retrieval removes what cannot answer. It is not a similarity search over everything.
 
-**One function picks the route.** `decide()` in [`decide.js`](src/assistant/decide.js) applies 26 readable rules, and each answer shows the rules it went through. Emergencies and personal data are caught here, before any model call. Questions about structured data go straight to that data:
+**One function picks the route.** `decide()` in [`decide.js`](src/assistant/decide.js) applies 27 readable rules, and each answer shows the rules it went through. Emergencies and personal data, including phone numbers in common formats, are caught here, before any model call. Questions about structured data go straight to that data:
 
 | Question | Route |
 |---|---|
@@ -64,7 +64,7 @@ Retrieval removes what cannot answer. It is not a similarity search over everyth
 | A gross salary amount | The guide's own simulator. A net figure stops it, and a figure with no period is asked back |
 | "Which tax class?" | The guide's decision tree |
 | "Am I covered?" | Table of 13 claims across 4 anonymised contracts |
-| A commune and a figure, or a ranking | The commune table, queried by code. The citation is the query |
+| A commune and a figure, a year, a threshold or a ranking | The commune table, queried by code. The citation is the query. A figure it does not hold is said to be missing, never replaced by a neighbouring one |
 | Lists or thresholds on benefits | Table of 28 cards |
 | "What do I do, and when?" | Journey steps |
 | A subject and nothing else ("crèches") | That subject's page: what the guide keeps from it |
@@ -79,10 +79,11 @@ Retrieval removes what cannot answer. It is not a similarity search over everyth
 1. Line vectors (`text-embedding-3-small`, 256 dimensions) add nearby passages to the shortlist.
 2. `arbitre` (`gpt-4.1-mini`) ranks up to 10 candidates and gives its reason.
 
-In both cases `verifier` (`gpt-5-mini`), which does not see the ranking, says whether the chosen passage answers. If it does not:
+In both cases `verifier` (`gpt-5-mini`), which does not see the ranking, reads the passage line by line and says which lines carry the answer. Those are the lines shown, so what was checked is what the reader sees. If it says the passage does not answer:
 
 - a how-to question opens the right page instead, because one passage is rarely a whole procedure;
 - a number the passage does not carry becomes "the guide does not give this figure";
+- a refused clear winner gives the other candidates a chance;
 - anything else is "not found", with that passage shown as the nearest.
 
 See it: the [Aiguillage tab](https://sfhajji.github.io/guide-assistant/machine/#aiguillage) lists the rules and the model calls.
@@ -91,7 +92,7 @@ See it: the [Aiguillage tab](https://sfhajji.github.io/guide-assistant/machine/#
 
 Every answer has a type, and code assembles it. The sentence shown is fetched from the guide by its line id.
 
-- **Types:** RÉPONSE, CALCUL, LISTE, LE GUIDE DIT DEUX CHOSES, JE N'AI PAS TROUVÉ, LE GUIDE NE LE CHIFFRE PAS, OUTIL DU GUIDE, CE QUE DISENT QUATRE CONTRATS, HORS DU GUIDE, JE NE RÉPONDS PAS À CELA, DONNÉE PERSONNELLE and 112.
+- **Types:** RÉPONSE, CALCUL, LISTE, LE GUIDE DIT DEUX CHOSES, JE N'AI PAS TROUVÉ, LE GUIDE NE LE CHIFFRE PAS, OUTIL DU GUIDE, CE QUE DISENT QUATRE CONTRATS, HORS DU GUIDE, JE NE RÉPONDS PAS À CELA, DONNÉE PERSONNELLE, L'ASSISTANT and 112.
 - **Citation:** "Voir sur la page" opens the page and highlights the passage with the CSS Custom Highlight API, using the line's address.
 - **Yes or no:** the label appears only if two separate reads by two models agree. Otherwise the guide's rule stands alone.
 - **Conflicts:** places where the guide says two things are declared in [`declare.js`](src/assistant/declare.js) and shown side by side.
@@ -103,21 +104,32 @@ Every answer has a type, and code assembles it. The sentence shown is fetched fr
 
 ## What it measures
 
-80 new questions, written by an AI that saw neither the engine nor its rules, working only from the guide's tables, and read only after measuring ([`eval/frais.jsonl`](eval/frais.jsonl)). The code was frozen first. Each row switches a piece off or replaces the system.
+There is no clean number for the current code, so each result below names the version it measured. Columns: right, wrong and confident, says not found, sent to a tool.
 
-| Version | Right | Wrong and confident | Says not found |
-|---|---|---|---|
-| **Full assistant** | **58 (73%)** | **13 (16%)** | **9 (11%)** |
-| No model | 40 (50%) | 17 (21%) | 23 (29%) |
-| No model, no dictionary | 35 (44%) | 19 (24%) | 26 (33%) |
-| No model, no current page | 38 (48%) | 19 (24%) | 23 (29%) |
-| Plain keywords, first line | 13 (16%) | 67 (84%) | 0 |
+| Questions | Code | Right | Wrong | Not found | Tool |
+|---|---|---|---|---|---|
+| **80 questions not yet read** ([`eval/frais.jsonl`](eval/frais.jsonl)) | 55043d3 | **58 (73%)** | **13 (16%)** | 9 (11%) | 0 |
+| The same 80, read and fixed after | 826d584 | 67 (84%) | 5 (6%) | 8 (10%) | 0 |
+| 199 harder questions, full of traps, read ([`eval/sealed.jsonl`](eval/sealed.jsonl)) | 826d584 | 70 (35%) | 28 (14%) | 86 (43%) | 15 (8%) |
 
-- When the guide has the answer: 39 of 58 right. When it should not answer: 19 of 22 correct refusals.
-- Questions that point at the open page are the weak spot: 5 of 10 right, 3 wrong.
-- These questions are direct. On 199 harder questions, full of traps and already read, the same version gets 66 right (33%), 37 wrong (19%), 83 not found and 13 sent to a tool ([`eval/sealed.jsonl`](eval/sealed.jsonl)). Real readers are probably somewhere between the two, but no real reader has been measured.
-- Reading the 13 wrong answers afterwards found real bugs, such as "pas européen" being read as European. They are fixed, and those fixes are not counted in these numbers.
-- Model use: 2.17 calls per question, median time 1.9 s, 90th percentile 2.9 s.
+What each piece adds, on the 199 harder questions at 826d584:
+
+| Version | Right | Wrong |
+|---|---|---|
+| Full assistant | 70 | 28 |
+| No model | 47 | 43 |
+| No model, no dictionary | 45 | 34 |
+| No model, no current page | 45 | 52 |
+| Plain keywords, first line | 15 | 184 |
+
+How to read these:
+
+- **Only the first row is a test on unseen questions.** They were written by an AI that saw neither the engine nor its rules. The file was in the repository before that version, unread, and its author's report named about a dozen topics.
+- **The 84% is not a result on new questions.** I read the 13 errors and fixed their causes, so it only shows the effect of those fixes.
+- **The 80 questions are too easy to stand alone.** None asks for a calculation, a conflict, a clarification, a tool, a list or personal data, and only 10 point at a page.
+- **Open-page questions are still weak on the hard set:** 1 right of 28, 8 wrong. Many are about what a simulator screen shows, which is not read as text.
+- **The score leans in its favour.** A second model can upgrade an error to right, never the reverse, and "not found" counts as right on any question without an answer, whatever the reason.
+- **No real reader has been measured.**
 
 Details by question type are in the [Mesures tab](https://sfhajji.github.io/guide-assistant/machine/#mesures), and known limits in the [Limites tab](https://sfhajji.github.io/guide-assistant/machine/#limites).
 

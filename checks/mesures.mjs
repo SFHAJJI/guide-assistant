@@ -68,6 +68,7 @@ const nRep = somme(reponse, "n"), jRep = somme(reponse, "juste");
 const nAut = somme(v => !reponse(v), "n"), jAut = somme(v => !reponse(v), "juste");
 const sortie = {
   titre: TITRE || "",
+  code: (process.env.GITHUB_SHA || "").slice(0, 7),
   resume: [
     [`${Math.round(100 * complet.juste / complet.n)} %`, "de bonnes réponses, sur toutes les questions"],
     [`${Math.round(100 * complet.faux / complet.n)} %`, "de mauvaises réponses affichées comme justes"],
