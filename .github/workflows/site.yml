@@ -1,0 +1,53 @@
+name: site
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+env:
+  GUIDE_REPO: https://github.com/lux-guide/lux-guide.github.io
+  GUIDE_COMMIT: 8de7372818adf9cbdffded53530791ffbffec930
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Fetch the guide at its pinned commit
+        run: |
+          git clone --quiet "$GUIDE_REPO" guide-src
+          git -C guide-src checkout --quiet "$GUIDE_COMMIT"
+      - name: Build
+        run: |
+          node build/assemble.mjs guide-src dist "${GUIDE_COMMIT:0:7}"
+          node build/index.mjs guide-src dist/guide/assistant "${GUIDE_COMMIT:0:7}"
+      - name: Code tests
+        run: node --test tests/
+      - name: Browser checks
+        run: |
+          npm i --no-save playwright@1.48 http-server@14
+          npx playwright install --with-deps chromium
+          npx http-server dist -p 8080 -s &
+          sleep 2
+          node checks/browser.mjs http://localhost:8080
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4
