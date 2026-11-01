@@ -48,8 +48,7 @@ const CAS = [
   ["T63 FAQ opener never Oui", "Le régime des impatriés dépend-il de la classe d'impôt ?", null, ["REPONSE"], r => assert.ok(!/^Oui/.test(r.parts[0].lignes[0].t))],
   ["T54 closed pane", "le vendeur allemand doit me donner quoi ?", null, ["REPONSE"], r => assert.match(r.parts[0].lignes[0].s, /Allemagne/)],
   ["T35 typo", "c'est quoi le madricule ?", null, ["REPONSE"]],
-  ["T18 false split", "quels sont les droits et devoirs du locataire ?", null, ["REPONSE"]],
-  ["T32 summary", "résume cette page", "bail", ["REPONSE"]],
+    ["T32 summary", "résume cette page", "bail", ["REPONSE"]],
   ["T60 tip", "une astuce pour la commune ?", "arrivee", ["REPONSE"], r => assert.strictEqual(r.parts[0].registre, "communaute")],
   ["T21 complement", "qu'est-ce qui n'est pas couvert en cas de bris de glace ?", null, ["VERDICTS"]],
   ["T26 time", "que faire avant le départ ?", null, ["LISTE"]],
@@ -62,6 +61,11 @@ for (const [nom, q, page, attendu, plus] of CAS) {
     if (plus) plus(r);
   });
 }
+
+test("T18 false split stays one question", async () => {
+  const r = await ask("quels sont les droits et devoirs du locataire ?");
+  assert.strictEqual(r.parts.length, 1);
+});
 
 test("every declared line exists", () => {
   for (const c of window.DECLARE.conflits) for (const l of c.lignes) assert.ok(M.trouve(l.p, l.c), `${c.id}: ${l.c}`);
