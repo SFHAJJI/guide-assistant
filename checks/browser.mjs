@@ -14,7 +14,7 @@ await page.goto(`${BASE}/guide/`, { waitUntil: "load" });
 await page.waitForTimeout(500);
 
 // His rule: one conversation window on screen at a time (README.md:414-421).
-const fenetres = () => page.evaluate(() => [...document.querySelectorAll("#widget, #panel-assistant")].filter(e => !e.hidden && e.offsetParent !== null).length);
+const fenetres = () => page.evaluate(() => [...document.querySelectorAll("#widget, #panel-assistant")].filter(e => !e.hidden && e.getClientRects().length > 0).length);
 check("one window at load", (await fenetres()) <= 1);
 await page.click("#widget-btn").catch(() => {});
 await page.waitForTimeout(200);

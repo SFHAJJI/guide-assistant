@@ -57,7 +57,7 @@
   // ---------- Cards ----------
   const MOTS = { REPONSE: "RÉPONSE", CALCUL: "CALCUL", LISTE: "LISTE", DEUX_CHOSES: "LE GUIDE DIT DEUX CHOSES", RIEN: "RIEN DANS LE GUIDE SOUS CES MOTS",
     NE_CHIFFRE_PAS: "LE GUIDE NE LE CHIFFRE PAS", OUTIL: "OUTIL DU GUIDE", REFUS: "JE NE RÉPONDS PAS À CELA", PERSONNEL: "DONNÉE PERSONNELLE", URGENCE: "112",
-    VERDICTS: "CE QUE DISENT QUATRE CONTRATS", REPONSE_SANS: "LE GUIDE NE CALCULE PAS CELA" };
+    VERDICTS: "CE QUE DISENT QUATRE CONTRATS", HORS: "HORS DU GUIDE", REPONSE_SANS: "LE GUIDE NE CALCULE PAS CELA" };
 
   function journal() { return $("#widget-log"); }
 
@@ -90,6 +90,7 @@
     const mot = p.statut === "CLARIFIER" ? (String(p.champ).startsWith("arbre") || p.champ === "brut" ? "IL ME FAUT UNE PRÉCISION" : "JE PEUX COMPRENDRE PLUSIEURS CHOSES") : MOTS[p.statut];
     if (mot) c.appendChild(el("div", "mot", mot));
     if (p.titre) c.appendChild(el("div", "titre", p.titre));
+    if (p.label) c.appendChild(el("div", "etiquette", { oui: "Oui", non: "Non", ca_depend: "Ça dépend" }[p.label] + ", d'après cette règle :"));
     if (p.ailleurs) c.appendChild(el("div", "ailleurs", `Ce n'est pas sur la page que vous lisez. C'est dans : ${p.ailleurs}.`));
     if (p.texte && p.statut !== "RIEN") c.appendChild(el("p", "texte", p.texte));
     if (p.echo) { const e = el("p", "echo", "J'ai compris : " + p.echo + " "); const b = el("button", "lien", "Corriger"); b.addEventListener("click", () => { const i = $("#widget-input"); i.value = p.question; i.focus(); }); e.appendChild(b); c.appendChild(e); }

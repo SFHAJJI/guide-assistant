@@ -35,6 +35,7 @@
     return d[a.length][b.length];
   }
 
+  const SMS = { koi: "quoi", kwa: "quoi", pr: "pour", ds: "dans", qd: "quand", pk: "pourquoi", pq: "pourquoi", cb: "combien", cmb: "combien", jsuis: "je suis", chui: "je suis", jpeux: "je peux", jdois: "je dois", jveux: "je veux", secu: "sécurité sociale", "sécu": "sécurité sociale", proprio: "propriétaire", appart: "appartement", immat: "immatriculation", bcp: "beaucoup", mm: "même", ya: "il y a", tjrs: "toujours", auj: "aujourd'hui" };
   const MOTS_DE_TYPE = new Set(["cout", "prix", "montant", "tarif", "combien", "delai", "date", "duree", "frai", "poste"].map(stem));
   const DEMONYMES = { allemand: "allemagne", allemande: "allemagne", francais: "france", francaise: "france", belge: "belgique" };
 
@@ -59,10 +60,11 @@
     ["r18", "Question fréquente de même forme", "faq_cache"],
     ["r19", "Par défaut : les lignes du guide", "fiche_qa"],
     ["r20", "Rien de plus : balayage de toutes les lignes", "absence"],
+    ["r21", "Hors du sujet du guide, sans balayage", "hors_sujet"],
   ];
 
   function creer(index, opt = {}) {
-    const { DICO = [], REFUS = [], DECLARE = {}, sim = null, modele = null } = opt;
+    const { DICO = [], REFUS = [], DECLARE = {}, sim = null } = opt;
     const L = index.lignes;
     const pageById = new Map(index.pages.map(p => [p.id, p]));
     const byId = new Map(L.map(l => [l.id, l]));
@@ -98,8 +100,13 @@
     }
 
     // ---------- Brick 2: the row ----------
-    function corriger(q) {
+    function corriger(q0) {
       const corrections = [];
+      const q = q0.replace(/\b(koi|kwa|pr|ds|qd|pk|pq|cb|cmb|jsuis|chui|jpeux|jdois|jveux|secu|sécu|proprio|appart|immat|bcp|mm|ya|tjrs|auj)\b/gi, m => {
+        const v = SMS[m.toLowerCase()];
+        corrections.push([m, v]);
+        return v;
+      }).replace(/\bc koi\b/gi, "c'est quoi");
       const out = q.replace(/[a-zàâäéèêëïîôöùûüçœ]{4,}/gi, w => {
         const p = plain(w);
         if (vocab.has(p) || STOP.has(p) || vocab.has(p.replace(/s$/, "")) || vocab.has(p + "s") || inv.has(stem(p))) return w;
@@ -309,6 +316,7 @@
 
     // ---------- Handlers: <format>_<intent> ----------
     const H = {
+      hors_sujet: () => ({ statut: "HORS", texte: "Cette question sort de ce que couvre le guide : l'installation au Luxembourg." }),
       urgence: () => ({ statut: "URGENCE", texte: "Appelez le 112 (urgences, gratuit, depuis tout téléphone). Je suis un guide, je ne peux pas vous aider dans l'urgence." }),
       prive: () => ({ statut: "PERSONNEL", texte: "Votre message contient ce qui ressemble à une donnée personnelle. Je ne l'ai ni répété ni envoyé. Reformulez sans ce numéro et je chercherai." }),
       salut: (row, ctx) => ({ statut: "SALUT", texte: /merci/.test(row.pq) ? "Avec plaisir." : `Bonjour. ${ctx.page ? `Vous lisez : ${ctx.page.titre}. ` : ""}Posez votre question, je réponds avec les phrases du guide.` }),
@@ -502,6 +510,7 @@
       },
 
       async fiche_qa(row, ctx, T) {
+        const modele = opt.modele || null;
         const f = chercher(row, ctx);
         T.push({ qui: "code", etape: "Détecteurs", detail: `${f.nb} lignes touchées · marge ${f.marge.toFixed(1)}`, json: { audit: f.audit } });
         if (!f.top.length) return null;
@@ -513,21 +522,24 @@
         const assezFort = x => row.epingle ? x.s > 0
           : motsAbsents.length && x.couverture < 0.6 ? false
           : (x.sc.mots.size >= 2 && x.couverture >= 0.5) || ((x.sc.dico >= 1 || x.sc.dicoPage) && x.couverture >= 0.33) || (f.stems.length === 1 && x.couverture === 1);
-        if (!assezFort(c) && !modele) { T.push({ qui: "code", etape: "Refus", detail: `meilleure ligne trop faible (couverture ${c.couverture.toFixed(2)}${motsAbsents.length ? ", mots absents : " + motsAbsents.join(", ") : ""})` }); return null; }
+        if (!assezFort(c) && !modele && !0) { T.push({ qui: "code", etape: "Refus", detail: `meilleure ligne trop faible (couverture ${c.couverture.toFixed(2)}${motsAbsents.length ? ", mots absents : " + motsAbsents.join(", ") : ""})` }); return null; }
         const savingsDansMarge = f.top.slice(0, 4).some(x => x.l.nomodel && c.s - x.s < MIN_MARGE);
         if (!clair && savingsDansMarge && !c.l.nomodel) {
           const autre = f.top.find(x => x.l.nomodel);
           return { statut: "CLARIFIER", texte: "Je peux comprendre deux choses. Laquelle ?", champ: "lieu",
             options: [{ label: pageById.get(c.l.p)?.titre || c.l.p, envoie: `${row.original} (${pageById.get(c.l.p)?.titre})` }, { label: "Section épargne : " + autre.l.s, envoie: autre.l.s }] };
         }
-        if (!clair && modele && modele.arbitre && !c.l.nomodel) {
-          arbitre = await modele.arbitre(row, f.top.filter(x => !x.l.nomodel).slice(0, 6).map(x => ({ id: x.l.id, section: pageById.get(x.l.p)?.titre + " › " + x.l.s, methods: Object.keys(x.sc).filter(k => x.sc[k]), snippet: x.l.t.slice(0, 240) })));
+        if ((!clair || !assezFort(c)) && modele && !c.l.nomodel) {
+          row.appels = (row.appels || 0) + 1;
+          const glossaire = row.concepts.slice(0, 2).map(x => pageById.get((x.c.pages || [])[0])?.resume).filter(Boolean).join(" ");
+          const cands = f.top.filter(x => !x.l.nomodel).slice(0, 8);
+          arbitre = await modele.arbitre(row, cands.map(x => ({ id: x.l.id, section: pageById.get(x.l.p)?.titre + " › " + x.l.s, methods: ["mots", "dico", "valeur", "titre", "page", "etiquette"].filter(k => k === "mots" ? x.sc.mots.size : x.sc[k]), snippet: autour(x.l).map(y => y.t).join(" ").slice(0, 320) })), glossaire);
           if (arbitre) {
             T.push({ qui: "modèle", etape: "Arbitre", detail: arbitre.raison || "", json: arbitre });
-            const pick = arbitre.choix && f.top.find(x => x.l.id === arbitre.choix);
+            const pick = arbitre.choix && cands.find(x => x.l.id === arbitre.choix);
             if (pick) c = pick;
-            else if (arbitre.aucun) return null;
-          }
+            else { T.push({ qui: "code", etape: "Arbitre écouté", detail: "aucun candidat ne répond" }); return null; }
+          } else T.push({ qui: "modèle", etape: "Arbitre", detail: "pas de réponse dans le temps : meilleure ligne du code, signalée" });
         } else {
           T.push({ qui: clair ? "modèle" : "code", etape: clair ? "Modèle non appelé" : "Sans arbitre", detail: clair ? "marge claire" : "marge plate, pas de modèle disponible : meilleure ligne, non arbitrée" });
         }
@@ -545,7 +557,17 @@
         if (row.type === "definition" || row.type === "procedure") {
           for (const x of autour(c.l)) if (!lignes.some(y => y.id === x.id) && lignes.length < 3) lignes.push(x);
         }
-        return { statut: manque === "NE_CHIFFRE_PAS" ? "NE_CHIFFRE_PAS" : manque === "NE_DATE_PAS" ? "NE_CHIFFRE_PAS" : "REPONSE", lignes, autour: autour(c.l), sources: [source(c.l)],
+        // D25: for a yes/no, a label only if two separate reads agree. Never on a savings line.
+        let label = null, conditions = null;
+        if (row.type === "booleen" && modele && !c.l.nomodel && (row.appels || 0) <= 1) {
+          const contexte = autour(c.l).slice(0, 6).map(y => ({ id: y.id, t: y.t }));
+          const a = await modele.lire(row, contexte);
+          const b = a && a.label !== "inconnu" ? await modele.relire(row, contexte) : null;
+          T.push({ qui: "modèle", etape: "Lecture oui/non", detail: a ? `première lecture : ${a.label}${b ? ", seconde lecture : " + b.label : ""}` : "pas de réponse", json: { a, b } });
+          if (a && b && a.label === b.label) { label = a.label; conditions = (a.conditions || []).filter(id => contexte.some(y => y.id === id)); }
+          else if (a && b) T.push({ qui: "code", etape: "Désaccord", detail: "pas d'étiquette, la règle seule" });
+        }
+        return { label, statut: manque === "NE_CHIFFRE_PAS" ? "NE_CHIFFRE_PAS" : manque === "NE_DATE_PAS" ? "NE_CHIFFRE_PAS" : "REPONSE", lignes, autour: autour(c.l), sources: [source(c.l)],
           ailleurs: ctx.page && c.l.p !== ctx.page.id ? pageById.get(c.l.p)?.titre : null, nomodel: !!c.l.nomodel, audit: f.audit, clair, nonArbitre: !clair && !arbitre };
       },
 
@@ -580,6 +602,7 @@
       if (/\b[a-z]{2}\d{2}(?:\s?[a-z0-9]{4}){3,}\b/.test(q) || /\b\d{13}\b/.test(q.replace(/\s/g, "")) && /\d{4}\s?\d{4}\s?\d{5}/.test(q)) { dit("r2"); return plan; }
       if (/^(bonjour|salut|bonsoir|hello|coucou|merci|hi|thanks)\b[ ,.!a-z]{0,14}$/.test(q) && row.mots.length <= 1) { dit("r3"); return plan; }
       if (REFUS.some(r => r.re.test(q))) { dit("r4"); return plan; }
+      if (row.horsSujet) { dit("r21"); return plan; }
       const multi = row.concepts.find(c => c.c.sens && !c.c.sens.some(s => s.mots.some(m => q.includes(plain(m)))));
       if (multi) { dit("r6", multi.mot); return plan; }
       if (!row.concepts.length && !row.herite && !row.mots.length && !ctx.page) { dit("r7"); return plan; }
@@ -608,18 +631,28 @@
       if (row.corrections.length) T.push({ qui: "code", etape: "Orthographe", detail: row.corrections.map(c => `${c[0]} → ${c[1]}`).join(", ") + " (vocabulaire du guide)" });
       if (row.herite) T.push({ qui: "code", etape: "Suite", detail: `repris de : ${row.herite}` });
 
-      // Parse call: only behind a code gate (D31).
-      if (modele && modele.parse && !row.concepts.length && row.mots.length) {
-        const nonFr = !row.mots.some(m => vocab.has(m));
-        const parse = await modele.parse(row, concepts.filter(c => c.source === "moi" || c.id.startsWith("f:")).map(c => c.id));
+      // Parse call: only behind a code gate (D31), and never for what the first rules catch.
+      const modele = opt.modele || null;
+      const zeros = row.mots.filter(m => !inv.has(stem(m)));
+      const premiere = decide(row, ctx)[0].id;
+      if (modele && row.mots.length && !["r1", "r2", "r3", "r4", "r6", "r8"].includes(premiere) && (!row.concepts.length || zeros.length || row.mots.length >= 6)) {
+        row.appels = (row.appels || 0) + 1;
+        const liste = concepts.filter(c => !c.tool).map(c => c.source === "auteur" ? `${c.id}: ${c.mots[0]}` : `${c.id}: ${c.mots.slice(0, 2).join(", ")}`);
+        const parse = await modele.parse(row, liste, ctx.page?.titre);
         if (parse) {
           T.push({ qui: "modèle", etape: "Compréhension", detail: (parse.termes || []).join(", "), json: parse });
-          for (const id of parse.concepts || []) { const c = concepts.find(x => x.id === id); if (c) row.concepts.push({ id, mot: c.mots[0], source: "modele", c }); }
-          for (const t of parse.termes || []) for (const w of content(t)) if (!row.mots.includes(w)) row.mots.push(w);
-          if (parse.type) row.type = parse.type;
-          if (parse.forme) row.forme = parse.forme;
-          row.langue = nonFr ? parse.langue : null;
-        }
+          if (parse.dans_le_sujet === false) row.horsSujet = true;
+          const pc = plain(parse.corrigee || "").replace(/[?!.]+$/g, "").trim();
+          if (pc) { row.pq = pc; row.corrigee = parse.corrigee; }
+          const deja = new Set(row.concepts.map(x => x.id));
+          for (const x of trouverConcepts(pc)) if (!deja.has(x.id)) { deja.add(x.id); row.concepts.push(x); }
+          for (const id of parse.concepts || []) { const c = concepts.find(x => x.id === id); if (c && !deja.has(id)) { deja.add(id); row.concepts.push({ id, mot: c.mots[0], source: "modele", c }); } }
+          for (const t of [...(parse.termes || []), parse.corrigee || ""]) for (const w of content(t)) if (!row.mots.includes(w)) row.mots.push(w);
+          row.motsQuestion = content(parse.corrigee || row.corrigee);
+          if (parse.type && row.type === "texte") row.type = parse.type;
+          if (parse.forme && row.forme === "single") row.forme = parse.forme;
+          row.langue = parse.langue;
+        } else T.push({ qui: "modèle", etape: "Compréhension", detail: "pas de réponse dans le temps : je continue sans" });
       }
       T.push({ qui: "code", etape: "Question", detail: `${row.concepts.length ? "concept " + row.concepts.map(c => c.mot).join(", ") : "aucun concept"} · ${row.forme} · ${row.type}`, json: publique(row) });
 

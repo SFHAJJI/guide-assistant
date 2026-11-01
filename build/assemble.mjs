@@ -62,7 +62,11 @@ if (existsSync("src/assistant/assistant.js")) {
   let html = readFileSync(idx, "utf8");
   html = html.replace(/<script src="app\/bareme\.js/, '<script src="assistant/flag.js"></script>\n$&');
   html = html.replace("</head>", '<link rel="stylesheet" href="assistant/assistant.css">\n</head>');
-  html = html.replace("</body>", `<script src="assistant/assistant.js"></script>\n<p class="demo-credit">Copie de démonstration du guide public lux-guide.github.io (version ${COMMIT}). Seul l'assistant est ajouté. <a href="../machine/">Comment il fonctionne</a></p>\n</body>`);
+  html = html.replace("</body>", `<script src="assistant/dico.js"></script>
+<script src="assistant/declare.js"></script>
+<script src="assistant/moteur.js"></script>
+<script src="assistant/modele.js"></script>
+<script src="assistant/assistant.js"></script>\n<p class="demo-credit">Copie de démonstration du guide public lux-guide.github.io (version ${COMMIT}). Seul l'assistant est ajouté. <a href="../machine/">Comment il fonctionne</a></p>\n</body>`);
   writeFileSync(idx, html);
   cpSync("src/assistant", join(G, "assistant"), { recursive: true });
 }
