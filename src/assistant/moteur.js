@@ -54,7 +54,10 @@
       if (row.herite) T.push({ qui: "code", etape: "Suite", detail: `repris de : ${row.herite}` });
 
       // The open page is the first scope when the question points at it, or names nothing of its own.
-      if (ctx.page && !row.herite && !row.partout && L.some(l => l.p === ctx.page.id) && (row.epingle || (!row.concepts.length && (row.pointe || row.mots.length <= 1)))) row.portee = "page";
+      if (ctx.page && !row.herite && !row.partout && L.some(l => l.p === ctx.page.id) && (row.epingle || (row.predicat && row.mots.length <= 1) || (!row.concepts.length && (row.pointe || row.mots.length <= 1)))) row.portee = "page";
+      // What the reader typed, before the model adds its search terms: page_qa decides on this.
+      row.propre = !row.concepts.length || !!row.predicat;
+      row.motsLecteur = [...row.mots];
 
       // Parse call: only behind a code gate (D31), and never for what the first rules catch.
       const modele = opt.modele || null;

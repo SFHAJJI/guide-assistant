@@ -143,7 +143,7 @@ async function aiguillage() {
     { appel: "compréhension", quand: "aucun concept trouvé, un mot inconnu du guide, ou une longue question", rend: "des identifiants de concepts d'une liste fermée, une forme, un type, des termes de recherche", "si échec": "la ligne du code, et la trace le dit" },
     { appel: "vecteurs", quand: "marge plate : ajoute au dossier les passages proches", rend: "des identifiants de lignes. Une voix de plus, jamais pour conclure à une absence", "si échec": "le dossier reste celui du code" },
     { appel: "arbitre", quand: "marge plate, 10 candidats au plus", rend: "un identifiant et une raison", "si échec": "la meilleure ligne du code, signalée non arbitrée" },
-    { appel: "vérification", quand: "seulement sur le choix de l'arbitre, par un modèle d'une autre famille", rend: "ce passage répond, ou non", "si échec": "s'il ne répond pas : je n'ai pas trouvé, et le passage est montré comme le plus proche" },
+    { appel: "vérification", quand: "sur le passage choisi avant de l'afficher, y compris un gagnant net, par un modèle qui n'a pas vu le classement", rend: "ce passage répond, ou non", "si échec": "s'il ne répond pas : la fiche pour un comment faire, le guide ne le chiffre pas pour un chiffre absent, sinon je n'ai pas trouvé, avec ce passage comme le plus proche" },
     { appel: "lire", quand: "question oui/non, sur la ligne de la règle", rend: "oui, non ou ça dépend, avec les identifiants des lignes", "si échec": "la règle seule, sans étiquette" },
     { appel: "seconde lecture", quand: "seulement si une étiquette oui/non va s'afficher", rend: "son propre oui, non ou ça dépend, sans voir le premier", "si échec": "désaccord : la règle seule" },
   ], ["appel", "quand", "rend", "si échec"]));

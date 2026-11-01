@@ -63,7 +63,8 @@
         if (ctx.page?.id === "prevoyance" || /\b(111 ?bis|prevoyance|retraite complementaire|pension privee|epargne retraite|epargne-retraite|vieillesse)\b/.test(q)) dit("r22");
         if (row.portee === "page" && ctx.page?.id !== "prevoyance") dit("r24");
         if (row.concepts.some(c => c.id === "sinistre") && /\b(couvert|couverte|indemnise\w*|assurance|assureur|garanti\w*|suis-je|vol\w*|contrat\w*|exclu\w*)\b/.test(q)) dit("r12");
-        if (row.concepts.some(c => c.id === "aides") && (row.forme !== "single" || /\b(au[- ]dessus|plus de|moins de|sous)\b/.test(q))) dit("r13");
+        // Code's own reading of the shape: a question about one aid must not get the whole table.
+        if (row.concepts.some(c => c.id === "aides") && (row.formeCode !== "single" || /\b(au[- ]dessus|plus de|moins de|sous)\b/.test(q))) dit("r13");
         if (/\b(que faire|quoi faire|que dois-je faire|premier mois|avant le depart|premiere semaine|etapes)\b/.test(q) && !/\bvehicule|voiture|immatricul\w*\b/.test(q)) dit("r14");
         if (row.sujetSeul) dit("r25");
         dit("r18");

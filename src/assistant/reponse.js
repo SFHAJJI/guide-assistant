@@ -44,8 +44,9 @@
         const conceptOk = row.concepts.some(x => x.id === c.concept) || /\b(commune|arrivee|declar\w+|enregistr\w+)\b/.test(row.pq);
         if (!motOk || !conceptOk) continue;
         let v = null;
-        if (/\b(hors ue|hors union|pays tiers|marocain\w*|tunisien\w*|algerien\w*|americain\w*|indien\w*|chinois\w*|bresilien\w*|turc|turque|britannique|russe|ukrainien\w*|canadien\w*|cap-verdien\w*)\b/.test(row.pq)) v = "tiers";
         if (/\b(francais\w*|belge|allemand\w*|portugais\w*|italien\w*|espagnol\w*|polonais\w*|neerlandais\w*|roumain\w*|suisse|citoyen de l'union|europeen\w*)\b/.test(row.pq)) v = "ue";
+        // Last, so that it wins: "pas européen" is a fact about a third country, and the delay is not the same.
+        if (/\b(hors ue|hors union|pays tiers|(pas|non|non-)[ -]?europeen\w*|pas de l'union|marocain\w*|tunisien\w*|algerien\w*|americain\w*|indien\w*|chinois\w*|bresilien\w*|turc|turque|britannique|russe|ukrainien\w*|canadien\w*|cap-verdien\w*)\b/.test(row.pq)) v = "tiers";
         const ids = Object.keys(c.valeurs);
         const ligne = id => trouve(c.valeurs[id].ligne.p, c.valeurs[id].ligne.c);
         if (v && ligne(v)) return { statut: "REPONSE", lignes: [vue(ligne(v))], sources: [source(ligne(v))], note: v === "tiers" ? c.note : null, condition: c.id, fait: v };
@@ -71,7 +72,7 @@
         const lignes = L.filter(l => l.p === ctx.page.id && COEF[l.k] !== 0 && l.k !== "titre");
         const st = new Set(row.mots.map(stem));
         const typeRe = RE_TYPE[row.type];
-        const propre = !row.concepts.length;
+        const propre = row.propre;
         T.push({ qui: "code", etape: "Portée", detail: `la page ouverte, ${lignes.length} lignes`, json: { page: ctx.page.id, onglet: ctx.page.onglet || null } });
         const demander = () => ({ statut: "CLARIFIER", champ: "sujet", libre: true, texte: `Sur cette page (${titre}), je ne trouve pas de quoi répondre. De quoi parlez-vous ?`, options: [{ label: "Chercher dans tout le guide", envoie: `${row.original} (dans tout le guide)` }] });
         const sur = ls => ({ statut: "REPONSE", lignes: ls.map(vue), sources: [source(ls[0])], portee: "page" });
@@ -79,7 +80,7 @@
         if (/\b(ce|cet|cette) (chiffre|montant|truc|mot|terme)\b/.test(row.pq) && row.mots.length <= 1) return demander();
         // No word of its own: the type of the question picks the lines.
         const motsUtiles = [...st].filter(x => !MOTS_DE_TYPE.has(x));
-        if (!motsUtiles.length) {
+        if (!(row.motsLecteur || row.mots).map(stem).filter(x => !MOTS_DE_TYPE.has(x)).length || !motsUtiles.length) {
           if (row.type === "montant" || row.type === "duree") {
             const avec = lignes.filter(l => typeRe.test(l.plain)).sort((a, b) => (onglet && plain(b.s).includes(onglet) ? 1 : 0) - (onglet && plain(a.s).includes(onglet) ? 1 : 0) || (b.row ? 1 : 0) - (a.row ? 1 : 0));
             const uniques = [...new Map(avec.map(l => [l.t, l])).values()].slice(0, 5);
@@ -404,6 +405,18 @@
           T.push({ qui: "code", etape: "La fiche", detail: "une procédure : le passage seul ne suffit pas, la fiche répond" });
           return { statut: "REPONSE", titre: `${p.titre} : ce que le guide retient`, lignes: ls.map(vue), sources: [source(ls[0])], ailleurs: ctx.page && id !== ctx.page.id ? p.titre : null, lien: { route: p.route, label: `Ouvrir : ${p.titre}` } };
         };
+        // The second model says this passage does not answer. A how-to opens the page; a number that is not there is the guide's rule without its figure; anything else is "not found", with the passage as the nearest.
+        const siRefuse = () => {
+          const fiche = parPage();
+          if (fiche) return fiche;
+          const re = RE_TYPE[row.type];
+          if ((row.type === "montant" || row.type === "duree") && !re.test(c.l.row ? c.l.plain : autour(c.l).map(y => plain(y.t)).join(" "))) {
+            T.push({ qui: "code", etape: "Sans chiffre", detail: "le passage choisi parle du sujet et ne donne pas ce chiffre" });
+            return composer(c, row, ctx, T, { clair: false, audit: f.audit, st: f.stems });
+          }
+          row.proche = c.l;
+          return null;
+        };
         let arbitre = null;
         // The words must really land here. A zero on one of the reader's words is not ignored [7A:23].
         const motsAbsents = f.stems.filter(x => !inv.has(x));
@@ -447,26 +460,16 @@
               // The arbiter ranked. A second model, which did not see the ranking, says whether this passage answers.
               const v = modele.verifier ? await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, autour(c.l).map(y => y.t).join(" ").slice(0, 700)) : null;
               if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
-              if (v && !v.repond) {
-                const fiche = parPage();
-                if (fiche) return fiche;
-                // A number was asked, the place was found, and it carries none: that is the guide's rule without its figure.
-                const re = RE_TYPE[row.type];
-                if ((row.type === "montant" || row.type === "duree") && !re.test(autour(c.l).map(y => plain(y.t)).join(" "))) {
-                  T.push({ qui: "code", etape: "Sans chiffre", detail: "le passage choisi parle du sujet et ne donne pas ce chiffre" });
-                  return composer(c, row, ctx, T, { clair: false, arbitre, audit: f.audit, st: f.stems });
-                }
-                row.proche = c.l; return null;
-              }
+              if (v && !v.repond) return siRefuse();
             } else { T.push({ qui: "code", etape: "Arbitre écouté", detail: "aucun candidat ne répond" }); return null; }
           } else T.push({ qui: "modèle", etape: "Arbitre", detail: "pas de réponse dans le temps : meilleure ligne du code, signalée" });
         } else {
           T.push({ qui: clair ? "modèle" : "code", etape: clair ? "Modèle non appelé" : "Sans arbitre", detail: clair ? "marge claire" : "marge plate, pas de modèle disponible : meilleure ligne, non arbitrée" });
           // The margin is mine, not a proof. A clear winner still gets the second model's fresh read before it is called an answer.
-          if (clair && modele && modele.verifier && opt.verifierTout !== false && !c.l.nomodel && !c.l.row) {
+          if (clair && modele && modele.verifier && opt.verifierTout !== false && !c.l.nomodel) {
             const v = await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, autour(c.l).map(y => y.t).join(" ").slice(0, 700));
             if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
-            if (v && !v.repond) { const fiche = parPage(); if (fiche) return fiche; row.proche = c.l; return null; }
+            if (v && !v.repond) return siRefuse();
           }
         }
         if (!assezFort(c) && !arbitre?.choix) { T.push({ qui: "code", etape: "Refus", detail: `meilleure ligne trop faible (couverture ${c.couverture.toFixed(2)})` }); return null; }

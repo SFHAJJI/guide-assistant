@@ -83,7 +83,7 @@ for (const [nom, qs, attendu] of J) {
   await p2.screenshot({ path: `shots/${nom}.png` });
   await p2.close();
 }
-for (const [nom, qs, attendu] of [["bougie", "?q=Un%20assur%C3%A9%20laisse%20une%20bougie%20sur%20la%20table%20de%20son%20jardin%20pendant%20ses%20vacances.%20Avec%20la%20chaleur%2C%20la%20bougie%20fond%20et%20ab%C3%AEme%20la%20table.%20Est-ce%20couvert%20%3F", "JE N'AI PAS TROUVÉ"], ["sans-modele", "?sans=1&q=combien%20de%20caution%20et%20c%27est%20quoi%20le%20matricule%20%3F", "Deux questions"]]) {
+for (const [nom, qs, attendu] of [["bougie", "?q=Un%20assur%C3%A9%20laisse%20une%20bougie%20sur%20la%20table%20de%20son%20jardin%20pendant%20ses%20vacances.%20Avec%20la%20chaleur%2C%20la%20bougie%20fond%20et%20ab%C3%AEme%20la%20table.%20Est-ce%20couvert%20%3F", "JE N'AI PAS TROUVÉ"], ["sans-modele", "?sans=1&q=combien%20de%20caution%20et%20c%27est%20quoi%20le%20matricule%20%3F", "Deux questions"], ["page-ouverte", "?q=%C3%A7a%20co%C3%BBte%20combien%20%3F&p=fiche/vehicule&c=g-tab-couts", "Sur cette page"], ["communes", "?q=quelle%20commune%20a%20le%20loyer%20le%20moins%20cher%20%3F", "communes triées"], ["net", "?q=je%20veux%204000%20net%20combien%20de%20brut", "pas dans l'autre sens"]]) {
   const p2 = await ctx.newPage();
   await p2.goto(`${BASE}/guide/${qs}`, { waitUntil: "load" });
   await p2.waitForTimeout(800);

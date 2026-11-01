@@ -175,6 +175,34 @@ test("a definition takes the line that defines", async () => {
   assert.match(r.parts[0].lignes.map(l => l.t).join(" "), /appelé matricule/);
 });
 
+test("'pas européen' is a third country", async () => {
+  const r = await ask("jsuis pas européen, combien de jours pour declarer mon arrivee a la commune ?");
+  assert.match(r.parts[0].lignes[0].t, /trois jours/);
+});
+
+test("'c'est gratuit ?' stays on the open page", async () => {
+  const r = await ask("c'est gratuit ?", "luxtrust");
+  assert.ok(r.parts[0].lignes?.every(l => l.p === "luxtrust") || r.parts[0].statut === "CLARIFIER");
+});
+
+test("a word from the model cannot take a pointing question off the page", async () => {
+  const faux = { parse: async () => ({ corrigee: "délai de déménagement", termes: ["déménagement"], concepts: ["loyer"], type: "duree", forme: "single", langue: "fr", dans_le_sujet: true, ambigu: false, options: [] }), arbitre: async () => null, verifier: async () => null, lire: async () => null, relire: async () => null };
+  const Mm = window.Moteur.creer(index, { DICO: window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE, sim, modele: faux });
+  const r = await Mm.repondre("il y a un délai pour le faire ?", { page: { id: "independant", titre: "Indépendant" } });
+  assert.ok(r.parts[0].lignes?.every(l => l.p === "independant") || r.parts[0].statut === "CLARIFIER");
+});
+
+test("comparing two communes is one question", async () => {
+  const Mc = window.Moteur.creer(index, { DICO: window.DICO.map(d => (d.id === "communes" ? { ...d, mots: d.mots.filter(m => m !== "__COMMUNES__").concat(index.communes) } : d)), REFUS: window.REFUS, DECLARE: window.DECLARE, sim });
+  const r = await Mc.repondre("Entre Differdange et Dudelange, où le loyer mensuel est le moins cher ?", {});
+  assert.strictEqual(r.parts.length, 1);
+  assert.strictEqual(r.parts[0].lignesLibres.length, 2);
+});
+
+test("asking for an exact personal tax is refused, even with a salary", async () => {
+  assert.strictEqual((await ask("Je gagne 5 200 € brut par mois, dis-moi exactement combien d'impôt je vais payer")).parts[0].statut, "REFUS");
+});
+
 test("a bare 'Oui.' is never the whole answer", async () => {
   const r = await ask("le regime des impatries depend de la classe ?");
   assert.ok(!r.parts[0].lignes.some(l => /^(oui|non)\.?$/i.test(l.t.trim())));

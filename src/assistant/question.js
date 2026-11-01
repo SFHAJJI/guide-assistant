@@ -1,6 +1,6 @@
 // Brick 2, question parsing: the question becomes a row with named fields. Code only; the model's reading is added by the engine behind a gate.
 (function () {
-  const { plain, stem, content, STOP, DEMONYMES } = window.Texte;
+  const { plain, stem, content, STOP, DEMONYMES, MOTS_DE_TYPE } = window.Texte;
   function damerau(a, b, max) {
     if (Math.abs(a.length - b.length) > max) return max + 1;
     const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
@@ -14,13 +14,13 @@
     return d[a.length][b.length];
   }
 
-  const SMS = { koi: "quoi", kwa: "quoi", pr: "pour", ds: "dans", qd: "quand", pk: "pourquoi", pq: "pourquoi", cb: "combien", cmb: "combien", jsuis: "je suis", chui: "je suis", jpeux: "je peux", jdois: "je dois", jveux: "je veux", secu: "sécurité sociale", "sécu": "sécurité sociale", proprio: "propriétaire", appart: "appartement", immat: "immatriculation", bcp: "beaucoup", mm: "même", ya: "il y a", tjrs: "toujours", auj: "aujourd'hui" };
+  const SMS = { koi: "quoi", kwa: "quoi", pr: "pour", ds: "dans", qd: "quand", pk: "pourquoi", pq: "pourquoi", cb: "combien", cmb: "combien", jsuis: "je suis", chui: "je suis", jpeux: "je peux", jdois: "je dois", jveux: "je veux", secu: "sécurité sociale", "sécu": "sécurité sociale", proprio: "propriétaire", appart: "appartement", immat: "immatriculation", bcp: "beaucoup", mm: "même", ya: "il y a", tjrs: "toujours", auj: "aujourd'hui", allocs: "allocations", alloc: "allocation" };
 
   window.Briques = window.Briques || {};
   window.Briques.question = function ({ vocab, inv, concepts }) {
     function corriger(q0) {
       const corrections = [];
-      const q = q0.replace(/\b(koi|kwa|pr|ds|qd|pk|pq|cb|cmb|jsuis|chui|jpeux|jdois|jveux|secu|sécu|proprio|appart|immat|bcp|mm|ya|tjrs|auj)\b/gi, m => {
+      const q = q0.replace(/\b(koi|kwa|pr|ds|qd|pk|pq|cb|cmb|jsuis|chui|jpeux|jdois|jveux|secu|sécu|proprio|appart|immat|bcp|mm|ya|tjrs|auj|allocs|alloc)\b/gi, m => {
         const v = SMS[m.toLowerCase()];
         corrections.push([m, v]);
         return v;
@@ -48,7 +48,8 @@
     function trouverConcepts(pq) {
       const found = [];
       for (const c of concepts) {
-        for (const k of c.cles) if (k.re.test(pq)) { found.push({ id: c.id, mot: k.m, source: c.source, c }); break; }
+        // "délai" or "prix" says what kind of answer is wanted, not what the question is about, even when a page uses it as a tag.
+        for (const k of c.cles) if (!(content(k.m).length === 1 && MOTS_DE_TYPE.has(stem(content(k.m)[0]))) && k.re.test(pq)) { found.push({ id: c.id, mot: k.m, source: c.source, c }); break; }
       }
       // A longer word beats a shorter one found inside it.
       return found.filter(f => !found.some(g => g !== f && g.mot !== f.mot && g.mot.includes(f.mot) && g.c === f.c));
@@ -85,6 +86,10 @@
         epingle: /\b(cette page|cette fiche|cet onglet|this page|ici)\b/.test(pq),
         partout, notes: [],
       };
+      row.formeCode = row.forme;
+      // "c'est gratuit ?": a predicate with nothing it applies to. Its subject is whatever the reader is looking at.
+      row.predicat = /^(c'?est|c est|c)\s+(gratuit|payant|obligatoire|combien|cher|long|possible|normal|legal|vrai|automatique|valable)\b/.test(pq);
+      if (row.predicat && !partout) row.pointe = true;
       if (partout) { row.pointe = false; row.epingle = false; }
       // A subject and nothing else: every word belongs to the concept. "luxtrust c payant" is a question, "creches" is not.
       const motsDuSujet = new Set(row.concepts.flatMap(x => x.c.mots.flatMap(m => content(m).map(stem))));
@@ -115,9 +120,12 @@
       if (!/\bet\b|;|\?.+\?|,.*\bet\b/.test(plain(q))) return { pattern: "single", parts: [q] };
       // One tool, two values: stays one question (T16).
       if (/classe\s*\w+\s+et\s+(en\s+)?classe/i.test(plain(q))) return { pattern: "single", parts: [q] };
+      // "Entre A et B": one comparison, not two questions.
+      if (/\bentre\b.+\bet\b/.test(plain(q))) return { pattern: "single", parts: [q] };
       const brutes = q.split(/\s*;\s*|\?\s+(?=\S)|,\s+(?=[^,]*\bet\b)|,\s+|\s+et\s+(?!si\b)/i).map(s => s.trim()).filter(Boolean);
       if (brutes.length < 2) return { pattern: "single", parts: [q] };
       const propres = brutes.map(b => ({ b, cs: trouverConcepts(plain(b)).map(x => x.id), qm: QUESTION_MOT.test(plain(b)) }));
+      if (propres.filter(p => p.cs.includes("communes")).length >= 2) return { pattern: "single", parts: [q] };
       const utiles = propres.every(p => p.cs.length || p.qm);
       if (!utiles) return { pattern: "unifiee", parts: [q] };
       const deuxSujets = new Set(propres.flatMap(p => p.cs.slice(0, 1))).size >= 2 || propres.filter(p => p.qm).length >= 2;
