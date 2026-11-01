@@ -109,7 +109,7 @@
         corrections.push([m, v]);
         return v;
       }).replace(/\bc koi\b/gi, "c'est quoi");
-      const out = q.replace(/[a-zàâäéèêëïîôöùûüçœ]{4,}/gi, w => {
+      const out = q.replace(/[a-zàâäéèêëïîôöùûüçœ]{5,}/gi, w => {
         const p = plain(w);
         if (vocab.has(p) || STOP.has(p) || vocab.has(p.replace(/s$/, "")) || vocab.has(p + "s") || inv.has(stem(p))) return w;
         const max = p.length >= 8 ? 2 : 1;
@@ -297,9 +297,9 @@
     function verifConflit(row, part) {
       const pq = row.pq;
       for (const c of DECLARE.conflits || []) {
-        const hit = c.quand.filter(w => pq.includes(plain(w)));
+        const a = w => new RegExp("(^|[^a-z0-9])" + plain(w) + "($|[^a-z0-9])").test(pq);
         const conc = part.lignes && part.lignes.some(x => c.lignes.some(y => x.p === y.p && x.t.includes(y.c)));
-        if (conc || hit.length >= 2 || (hit.length === 1 && c.quand[0] === hit[0])) {
+        if (conc || (c.sujet.some(a) && c.aspect.some(a))) {
           const ls = c.lignes.map(y => trouve(y.p, y.c)).filter(Boolean);
           if (ls.length === 2) return { statut: "DEUX_CHOSES", lignes: ls.map(vue), sources: ls.map(source), declare: c.id, nomodel: ls.some(x => x.nomodel) };
         }
@@ -381,11 +381,13 @@
       arbre(row) {
         const { arbre, fins } = index.arbre;
         const pq = row.pq;
+        const ans = pq.match(/\b(veuf|veuve)\b.*\bdepuis (\d+) ans/);
+        const veufLongtemps = !!(ans && +ans[2] > 3);
         const faits = {
           depart: /\b(marie|mariee|pacse|pacsee|partenariat|ma femme|mon mari|mon epoux|mon epouse)\b/.test(pq) ? 0 : /\b(celibataire|seul|seule|union libre|divorce|divorcee|separe|separee|veuf|veuve|pas marie)\b/.test(pq) ? 1 : null,
           residence: /\b(reste|restent|encore|a l'etranger|en france|en belgique|en allemagne|au portugal)\b/.test(pq) ? 1 : /\b(tous les deux|au luxembourg|ici)\b/.test(pq) ? 0 : null,
-          rupture: /\bveuf|veuve\b.*\bdepuis moins|deces\b/.test(pq) ? 1 : /\b(divorce|divorcee|separe|separee)\b/.test(pq) ? 2 : /\b(celibataire|jamais marie|rien de tel)\b/.test(pq) ? 0 : null,
-          moderation: /\b(enfant|enfants|moderation)\b/.test(pq) ? 1 : /\b(64 ans|65 ans|retraite)\b/.test(pq) ? 2 : /\b(sans enfant|pas d'enfant|ni l'un ni l'autre)\b/.test(pq) ? 0 : null,
+          rupture: veufLongtemps ? 0 : /\b(veuf|veuve|deces)\b/.test(pq) ? 1 : /\b(divorce|divorcee|separe|separee)\b/.test(pq) ? 2 : /\b(celibataire|jamais marie|rien de tel)\b/.test(pq) ? 0 : null,
+          moderation: veufLongtemps ? 3 : /\b(sans enfant|pas d'enfant|ni l'un ni l'autre)\b/.test(pq) ? 0 : /\b(enfant|enfants|moderation)\b/.test(pq) ? 1 : /\b(64 ans|65 ans|retraite)\b/.test(pq) ? 2 : null,
         };
         let n = "depart"; const chemin = [];
         while (arbre[n]) {
@@ -512,7 +514,7 @@
             if (d > bs) { bs = d; best = e; }
           }
         }
-        if (!best || bs < 0.34) return null;
+        if (!best || bs < 0.45) return null;
         const ls = best.lignes.map(i => byId.get(i));
         return { statut: "REPONSE", titre: best.question, lignes: ls.slice(0, 3).map(vue), autour: ls.map(vue), sources: [source(ls[0])], nomodel: true, note: ["Réponse écrite à l'avance par l'auteur du guide. Aucun modèle ne lit cette section."] };
       },
@@ -648,7 +650,7 @@
       const q = row.pq, plan = [];
       const dit = (id, why) => plan.push({ id, route: REGLES.find(r => r[0] === id)[2], why });
       if (/\b(urgence|je sens le gaz|ca sent le gaz|au feu|au secours|crise cardiaque|ne respire|inconscient\w*|me suicider|emergency)\b/.test(q)) { dit("r1"); return plan; }
-      if (/\b[a-z]{2}\d{2}(?:\s?[a-z0-9]{4}){3,}\b/.test(q) || /\b\d{13}\b/.test(q.replace(/\s/g, "")) && /\d{4}\s?\d{4}\s?\d{5}/.test(q)) { dit("r2"); return plan; }
+      if (/\b[a-z]{2}\d{2}(?:\s?[a-z0-9]{4}){3,}\b/.test(q) || /\b\d{4}\s?\d{4}\s?\d{5}\b/.test(q) || /[a-z0-9._-]+@[a-z0-9-]+\.[a-z]{2,}/.test(q) || /(\+|\b00)\s?\d{2,3}[\s.]?\d{2,3}[\s.]?\d{2,3}/.test(q)) { dit("r2"); return plan; }
       if (/^(bonjour|salut|bonsoir|hello|coucou|merci|hi|thanks)\b[ ,.!a-z]{0,14}$/.test(q) && row.mots.length <= 1) { dit("r3"); return plan; }
       if (REFUS.some(r => r.re.test(q))) { dit("r4"); return plan; }
       if (row.horsSujet) { dit("r21"); return plan; }
@@ -658,7 +660,7 @@
       if (!row.concepts.length && !row.herite && !row.mots.length && !ctx.page) { dit("r7"); return plan; }
       if (!row.concepts.length && !row.herite && row.mots.length === 0 && ctx.page && ctx.page.id) { /* the page is the subject */ }
       if (row.concepts.some(c => c.c.tool)) { dit("r8"); return plan; }
-      if (/\b(salaire|brut|net|paie|gross|salary)\b/.test(q) && /\d/.test(q.replace(/classe\s*\d\w?/g, ""))) dit("r9");
+      if (/\b(salaire|brut|net|paie|gross|salary)\b/.test(q) && /\d/.test(q.replace(/classe\s*\d\w?/g, "")) && !/\b(belge|bruxelles|francais|allemand|paris|metz|rempli|par defaut)\b/.test(q)) dit("r9");
       else if (/\b(quelle classe|ma classe|quelle est ma classe|which tax class|classe d'impots? pour|dans quelle classe)\b/.test(q) || (/\bclasse\b/.test(q) && /\b(marie|mariee|celibataire|divorce|divorcee|veuf|veuve|pacse)\b/.test(q))) dit("r10");
       else if (/\b(il me manque|me reste|par ou commencer|ou j'en suis|qu'est ce que je dois faire|que me reste|prochaine etape)\b/.test(q)) dit("r11");
       else {

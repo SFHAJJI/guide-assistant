@@ -67,6 +67,28 @@ test("T18 false split stays one question", async () => {
   assert.strictEqual(r.parts.length, 1);
 });
 
+test("T44 long number never reaches a route", async () => {
+  for (const q of ["mon matricule 1985031212345, salaire 5200 net, tu verifies ?", "appelez-moi au +352 621 123 456", "mon mail est jean.dupont@example.com"]) {
+    const r = await ask(q);
+    assert.strictEqual(r.parts[0].statut, "PERSONNEL", q);
+  }
+});
+
+test("a 111bis question is not a conflict unless it asks about leaving", async () => {
+  const r = await ask("c'est quoi le 111bis ?");
+  assert.notStrictEqual(r.parts[0].statut, "DEUX_CHOSES");
+});
+
+test("'ordre de grandeur' is not the vehicle order", async () => {
+  const r = await ask("luxtrust en direct ca coute combien, juste un ordre de grandeur ?");
+  assert.notStrictEqual(r.parts[0].statut, "DEUX_CHOSES");
+});
+
+test("T55 widowed for five years", async () => {
+  const r = await ask("veuf depuis 5 ans, quelle classe ?");
+  assert.strictEqual(r.parts[0].fin, "classe1a");
+});
+
 test("every declared line exists", () => {
   for (const c of window.DECLARE.conflits) for (const l of c.lignes) assert.ok(M.trouve(l.p, l.c), `${c.id}: ${l.c}`);
   for (const c of window.DECLARE.conditions) for (const k of Object.keys(c.valeurs)) assert.ok(M.trouve(c.valeurs[k].ligne.p, c.valeurs[k].ligne.c), `${c.id}: ${k}`);

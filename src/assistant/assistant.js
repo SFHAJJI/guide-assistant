@@ -208,13 +208,15 @@
     try { res = await M.repondre(q, ctx); } catch (e) { attente.remove(); journal().appendChild(el("div", "msg bot", "Une erreur est survenue : " + e.message)); return; }
     attente.remove();
     if (res.parts.length > 1) journal().appendChild(el("div", "msg bot annonce-parties", `${res.parts.length === 2 ? "Deux" : res.parts.length === 3 ? "Trois" : res.parts.length} questions. Je réponds à chacune.`));
+    let premiere = null;
     res.parts.forEach((p, i) => {
       const c = carte(p);
+      premiere = premiere || c;
       if (res.parts.length > 1) c.prepend(el("div", "numero", String(i + 1)));
       journal().appendChild(c);
     });
     if (res.arret) journal().appendChild(el("div", "msg bot note", "La première réponse étant non, je m'arrête là."));
-    journal().scrollTop = journal().scrollHeight;
+    if (premiere) journal().scrollTop = premiere.offsetTop - journal().offsetTop - 8;
     const r0 = res.parts[0].row;
     if (r0 && r0.concepts?.length) dernier = { original: q, concepts: M.ligneDeQuestion(q, {}).concepts, mots: r0.mots };
     session.push({ quand: new Date().toISOString(), question: masque ? "(masqué)" : q, page: ctx.page?.id, statut: res.parts.map(p => p.statut).join("+"), route: res.parts.map(p => p.regle?.route).join("+"), lignes: res.parts.flatMap(p => (p.lignes || []).map(l => l.id)).join(" ") });

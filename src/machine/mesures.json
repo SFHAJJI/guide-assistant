@@ -1,0 +1,729 @@
+{
+ "n": 199,
+ "commit": "8de7372",
+ "date": "2026-11-01",
+ "regles": {
+  "r19": 46,
+  "r18": 5,
+  "r17": 5,
+  "r20": 79,
+  "r10": 7,
+  "r8": 18,
+  "r21": 19,
+  "r6": 7,
+  "r9": 7,
+  "r23": 1,
+  "r12": 3,
+  "r22": 4,
+  "r4": 3,
+  "r15": 1,
+  "r13": 1,
+  "r3": 1
+ },
+ "colonnes": [
+  "tranche",
+  "n",
+  "réponses justes",
+  "erreurs affirmées",
+  "sans réponse, dit",
+  "outil non lu"
+ ],
+ "tranches": [
+  {
+   "tranche": "assistant, modèle activé",
+   "n": 199,
+   "réponses justes": "62 (31 %)",
+   "erreurs affirmées": "35 (18 %)",
+   "sans réponse, dit": "86 (43 %)",
+   "outil non lu": 16
+  },
+  {
+   "tranche": "assistant, sans modèle",
+   "n": 199,
+   "réponses justes": "45 (23 %)",
+   "erreurs affirmées": "49 (25 %)",
+   "sans réponse, dit": "89 (45 %)",
+   "outil non lu": 16
+  },
+  {
+   "tranche": "sans dictionnaire, sans modèle",
+   "n": 199,
+   "réponses justes": "48 (24 %)",
+   "erreurs affirmées": "45 (23 %)",
+   "sans réponse, dit": "106 (53 %)",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "sans la page, sans modèle",
+   "n": 199,
+   "réponses justes": "41 (21 %)",
+   "erreurs affirmées": "52 (26 %)",
+   "sans réponse, dit": "90 (45 %)",
+   "outil non lu": 16
+  },
+  {
+   "tranche": "naïf : mots-clés, première ligne",
+   "n": 199,
+   "réponses justes": "15 (8 %)",
+   "erreurs affirmées": "184 (92 %)",
+   "sans réponse, dit": "0 (0 %)",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "assistant d'origine du guide",
+   "n": 199,
+   "réponses justes": "19 (10 %)",
+   "erreurs affirmées": "149 (75 %)",
+   "sans réponse, dit": "31 (16 %)",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : row",
+   "n": 28,
+   "réponses justes": "3 (11 %)",
+   "erreurs affirmées": "2 (7 %)",
+   "sans réponse, dit": "17 (61 %)",
+   "outil non lu": 6
+  },
+  {
+   "tranche": "route : conflict",
+   "n": 23,
+   "réponses justes": "4 (17 %)",
+   "erreurs affirmées": "6 (26 %)",
+   "sans réponse, dit": "10 (43 %)",
+   "outil non lu": 3
+  },
+  {
+   "tranche": "route : gap",
+   "n": 21,
+   "réponses justes": "15 (71 %)",
+   "erreurs affirmées": "2 (10 %)",
+   "sans réponse, dit": "0 (0 %)",
+   "outil non lu": 4
+  },
+  {
+   "tranche": "route : tool",
+   "n": 20,
+   "réponses justes": "2 (10 %)",
+   "erreurs affirmées": "4 (20 %)",
+   "sans réponse, dit": "13 (65 %)",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "route : site",
+   "n": 19,
+   "réponses justes": "0",
+   "erreurs affirmées": "4",
+   "sans réponse, dit": "14",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "route : fiche",
+   "n": 16,
+   "réponses justes": "8",
+   "erreurs affirmées": "3",
+   "sans réponse, dit": "5",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : faq",
+   "n": 13,
+   "réponses justes": "9",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "2",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : refuse",
+   "n": 12,
+   "réponses justes": "10",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "0",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "route : card",
+   "n": 12,
+   "réponses justes": "5",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "6",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : clarify",
+   "n": 9,
+   "réponses justes": "1",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "6",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : savings",
+   "n": 8,
+   "réponses justes": "1",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "5",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : privacy",
+   "n": 6,
+   "réponses justes": "0",
+   "erreurs affirmées": "3",
+   "sans réponse, dit": "3",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : listing",
+   "n": 4,
+   "réponses justes": "1",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "1",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : guided",
+   "n": 3,
+   "réponses justes": "2",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "1",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : case",
+   "n": 2,
+   "réponses justes": "0",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "2",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : tree",
+   "n": 2,
+   "réponses justes": "1",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "0",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "route : smalltalk",
+   "n": 1,
+   "réponses justes": "0",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "1",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "verdict : answer",
+   "n": 96,
+   "réponses justes": "29 (30 %)",
+   "erreurs affirmées": "16 (17 %)",
+   "sans réponse, dit": "44 (46 %)",
+   "outil non lu": 7
+  },
+  {
+   "tranche": "verdict : computed",
+   "n": 28,
+   "réponses justes": "2 (7 %)",
+   "erreurs affirmées": "5 (18 %)",
+   "sans réponse, dit": "20 (71 %)",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "verdict : absent",
+   "n": 24,
+   "réponses justes": "17 (71 %)",
+   "erreurs affirmées": "2 (8 %)",
+   "sans réponse, dit": "0 (0 %)",
+   "outil non lu": 5
+  },
+  {
+   "tranche": "verdict : conflict",
+   "n": 23,
+   "réponses justes": "4 (17 %)",
+   "erreurs affirmées": "6 (26 %)",
+   "sans réponse, dit": "10 (43 %)",
+   "outil non lu": 3
+  },
+  {
+   "tranche": "verdict : out_of_scope",
+   "n": 9,
+   "réponses justes": "8",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "0",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "verdict : list",
+   "n": 8,
+   "réponses justes": "1",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "5",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "verdict : two_choices",
+   "n": 8,
+   "réponses justes": "1",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "5",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "verdict : personal_data",
+   "n": 3,
+   "réponses justes": "0",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "2",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "style : slang",
+   "n": 64,
+   "réponses justes": "18 (28 %)",
+   "erreurs affirmées": "11 (17 %)",
+   "sans réponse, dit": "30 (47 %)",
+   "outil non lu": 5
+  },
+  {
+   "tranche": "style : pointing",
+   "n": 28,
+   "réponses justes": "2 (7 %)",
+   "erreurs affirmées": "11 (39 %)",
+   "sans réponse, dit": "14 (50 %)",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "style : short",
+   "n": 24,
+   "réponses justes": "6 (25 %)",
+   "erreurs affirmées": "6 (25 %)",
+   "sans réponse, dit": "12 (50 %)",
+   "outil non lu": 0
+  },
+  {
+   "tranche": "style : sms",
+   "n": 19,
+   "réponses justes": "5",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "10",
+   "outil non lu": 2
+  },
+  {
+   "tranche": "style : clean",
+   "n": 15,
+   "réponses justes": "3",
+   "erreurs affirmées": "2",
+   "sans réponse, dit": "8",
+   "outil non lu": 2
+  },
+  {
+   "tranche": "style : de",
+   "n": 12,
+   "réponses justes": "5",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "6",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "style : hostile",
+   "n": 12,
+   "réponses justes": "10",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "0",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "style : en",
+   "n": 9,
+   "réponses justes": "5",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "2",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "style : typo",
+   "n": 8,
+   "réponses justes": "2",
+   "erreurs affirmées": "1",
+   "sans réponse, dit": "3",
+   "outil non lu": 2
+  },
+  {
+   "tranche": "style : pt",
+   "n": 6,
+   "réponses justes": "4",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "1",
+   "outil non lu": 1
+  },
+  {
+   "tranche": "style : own_words",
+   "n": 2,
+   "réponses justes": "2",
+   "erreurs affirmées": "0",
+   "sans réponse, dit": "0",
+   "outil non lu": 0
+  }
+ ],
+ "notes": [
+  "Mesure figée : 199 questions d'un autre auteur, mises de côté avant le réglage et jamais lues avant cette mesure.",
+  "Modèle : 297 appels, soit 1.49 par question ; médian 1803 ms, 90e centile 3178 ms.",
+  "Une réponse est juste si la carte montre le passage ou la valeur attendus, ou si un autre modèle, relisant la carte et l'attendu, dit qu'elle donne la même information. Les questions viennent d'un autre auteur, et beaucoup portent sur des fichiers que l'assistant ne lit pas encore.",
+  "Relecture après la mesure, carte par carte, des 35 erreurs affirmées : 6 ne sont pas des erreurs (une règle montrée sans calculer, comme prévu ; une liste complète ; une bonne phrase mal notée). Je les laisse dans le chiffre.",
+  "La relecture a aussi trouvé de vrais défauts, corrigés après cette mesure et donc non comptés ici : un numéro à 13 chiffres non reconnu comme donnée personnelle, un conflit déclaré qui se déclenchait trop tôt, un mot corrigé à tort, une branche de l'arbre des classes.",
+  "L'assistant ne lit pas encore les cartes et les lignes de transport, sur lesquelles portent beaucoup de ces questions : c'est la colonne « outil non lu » et une bonne part de « sans réponse »."
+ ],
+ "echecs": [
+  {
+   "id": "arr47",
+   "q": "cb de jours de conges par an",
+   "route": "faq",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Congé parental indemnisé : 2 771 à 4 619 €, par mois à temps plein, pour chaque parent",
+   "attendu": "26 jours ouvrables et 11 jours fériés / Vingt-six jours ouvrables de congé légal par an, plus onze jours fériés. / Le droit s'ouvre après trois mois de travail ininterrompu chez le même employeur"
+  },
+  {
+   "id": "hou12",
+   "q": "is the 3% vat automatic if i buy a new flat to live in?",
+   "route": "faq",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Un doublement du plafond à 100 000 € a été annoncé en juin 2026, sous réserve de l'accord de la Commission européenne : pas encore applicable. 100 000 € 50 000 €",
+   "attendu": "non : habitation principale au moins deux ans et accord préalable de l'Administration de l'enregistrement / Le taux de 3 % suppose une affectation en habitation principale pendant deux ans et l'accord"
+  },
+  {
+   "id": "hou66",
+   "q": "dispense ccss c auto si je gagne peu ?",
+   "route": "fiche",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Si le revenu tiré de l'activité ne dépasse pas ce tiers sur l'année, vous pouvez demander une dispense d'affiliation.",
+   "attendu": "non : elle se demande expressément, sur un formulaire distinct de la déclaration d'entrée / elle ne s'applique jamais d'office"
+  },
+  {
+   "id": "veh38",
+   "q": "mon assureur belge m'a donne une attestation de sinistralite, ici c pareil qu'un bonus malus ? l'assureur lux doit en tenir compte ?",
+   "route": "fiche",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Le point qui pèse le plus sur la prime est votre historique de sinistres, et le document qui le porte s'appelle relevé d'information en France, attestation de sinistralité en Belgique, certificat bonu",
+   "attendu": "C'est le même document, et il doit en tenir compte comme d'un document national / attestation de sinistralité en Belgique, certificat bonus-malus au Luxembourg. C'est le même document. / Un assureur d"
+  },
+  {
+   "id": "hou46",
+   "q": "guichet.lu ecrit 3200 pour le 111bis, vous dites 4500, qui a raison ?",
+   "route": "fiche",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "DEUX_CHOSES",
+   "montre": "111bis : jusqu'à 4 500 € par an et par contribuable depuis 2026, épargne bloquée jusqu'à 60 ans au plus tôt. Ce n'est donc pas interdit : c'est cher.",
+   "attendu": "4 500 € depuis le 1er janvier 2026 ; la page Guichet.lu annonce encore 3 200 € / annonce encore 3 200 euros / le plafond est passé de 3 200 à 4 500 euros au 1er janvier 2026 / se déduisent jusqu'à 4 5"
+  },
+  {
+   "id": "hou35",
+   "q": "ca me dit classe 2 pendant 3 ans apres mon divorce mais le bouton calculer met classe 1, c laquelle ?",
+   "route": "conflict",
+   "verdict": "conflict",
+   "pourquoi": "hors sujet",
+   "statut": "REPONSE",
+   "montre": "Classe 2, pendant trois ans encore Un décès, un divorce ou une séparation ne fait pas basculer immédiatement en classe 1. Une période transitoire de trois ans maintient la classe 2, avant le passage e",
+   "attendu": "classe 2 pendant une période transitoire de trois ans ; le bouton règle pourtant le simulateur sur classe 1 / titre: \"Classe 2, pendant trois ans encore\" / if (sel) sel.value = clNoeud === \"classe2\" ?"
+  },
+  {
+   "id": "arr33",
+   "q": "ecole ou logement dabord ?",
+   "route": "conflict",
+   "verdict": "conflict",
+   "pourquoi": "hors sujet",
+   "statut": "REPONSE",
+   "montre": "C'est la démarche la plus longue et la plus contrainte de toute l'installation, et celle qu'il faut engager en premier, avant même la recherche de logement. Trois voies coexistent, très différentes.",
+   "attendu": "Commencer par l'école, avant même le logement. / L'inscription à la commune précède généralement l'inscription scolaire / Tout part de la commune."
+  },
+  {
+   "id": "too13",
+   "q": "divorcee y a 1 an, ca dit classe 2 ici mais le bouton calculer me met classe 1 ??",
+   "route": "conflict",
+   "verdict": "conflict",
+   "pourquoi": "une seule des deux lignes",
+   "statut": "REPONSE",
+   "montre": "Classe 2, pendant trois ans encore Un décès, un divorce ou une séparation ne fait pas basculer immédiatement en classe 1. Une période transitoire de trois ans maintient la classe 2, avant le passage e",
+   "attendu": "Le texte dit classe 2 pendant trois ans ; le bouton règle le simulateur sur classe 1 / J'ai divorcé ou je me suis séparé / Classe 2, pendant trois ans encore / sel.value = clNoeud === \"classe2\" ? \"cla"
+  },
+  {
+   "id": "arr31",
+   "q": "Peut-on ouvrir un compte bancaire sans justificatif d'adresse ?",
+   "route": "conflict",
+   "verdict": "conflict",
+   "pourquoi": "une seule des deux lignes",
+   "statut": "REPONSE",
+   "montre": "L'ouverture demande une pièce d'identité, un justificatif d'adresse et, le plus souvent, le contrat de travail.",
+   "attendu": "une pièce d'identité, un justificatif d'adresse / Ouvrir le compte avant de signer un bail. / le bail signé ou l'acte d'achat"
+  },
+  {
+   "id": "cmp24",
+   "q": "cette fiche dit que la rc et le bris de glace sont dans le socle, donc c dans tous les contrats ?",
+   "route": "conflict",
+   "verdict": "conflict",
+   "pourquoi": "une seule des deux lignes",
+   "statut": "CLARIFIER+REPONSE+RIEN",
+   "montre": "« rc » peut vouloir dire plusieurs choses dans le guide. Vous parlez de quoi ? Le socle habituel réunit l'incendie, les dégâts des eaux, le vol, le bris de glace et la responsabilité civile, cette der",
+   "attendu": "La fiche parle d'un socle habituel. Dans les données, la RC vie privée est en option chez A et D, et le bris de glace est l'écart le plus marqué. / Le socle habituel réunit / Différence la plus marqué"
+  },
+  {
+   "id": "arr41",
+   "q": "c vrai que les apparts sont loues sans lampes ? c une regle officielle ?",
+   "route": "conflict",
+   "verdict": "conflict",
+   "pourquoi": "hors sujet",
+   "statut": "REPONSE",
+   "montre": "Le point est à vérifier à l'état des lieux, pas après.",
+   "attendu": "c'est l'usage courant ici / est un retour d'expérience, pas un fait sourcé / Beaucoup de logements sont remis avec les fils au plafond"
+  },
+  {
+   "id": "too27",
+   "q": "interets deductibles anne 4 en couple avec 1 enfant combein",
+   "route": "tool",
+   "verdict": "computed",
+   "pourquoi": "dit : 16 000 €",
+   "statut": "REPONSE",
+   "montre": "Période : Années 3 à 6 | 1 personne : 4 000 € | Couple : 8 000 € | Couple et 2 enfants : 16 000 €",
+   "attendu": "12 000 EUR (4 000 x 3), si le conjoint est imposé collectivement et si l'enfant ouvre droit à une modération d'impôt / limitée à 4 000 euros pendant quatre ans / majoré de son propre montant / \"Années"
+  },
+  {
+   "id": "too18",
+   "q": "on gagne 80000 et 40000, le 15% c un max donc on recup a la decla nan ?",
+   "route": "tool",
+   "verdict": "computed",
+   "pourquoi": "attendu Non : en classe 2 il reste 5 618,98 EUR à payer (retenu 11 681,63, dû 17 300,62) ; l'abattement extra-professionnel de 4 500 n'est pas compté",
+   "statut": "REPONSE",
+   "montre": "Le gouvernement a annoncé le 16 juillet 2026 un passage à 45 000 € pour les actes signés depuis cette date. Tant que la loi n'est pas votée, le notaire applique 40 000 € et la différence se demande en",
+   "attendu": "Non : en classe 2 il reste 5 618,98 EUR à payer (retenu 11 681,63, dû 17 300,62) ; l'abattement extra-professionnel de 4 500 n'est pas compté / function menage(opts) / Ce sont des maxima / Positif : l"
+  },
+  {
+   "id": "hou13",
+   "q": "combien de tva sur 500000 ht",
+   "route": "tool",
+   "verdict": "computed",
+   "pourquoi": "attendu 35 000 € de TVA : avantage plafonné à 50 000 €, soit environ 357 143 € à 3 % et 142 857 € à 17 %, si les conditions sont remplies",
+   "statut": "REPONSE",
+   "montre": "Comme l'écart entre 17 % et 3 % représente quatorze points, ce plafond couvre environ 357 000 euros de base hors taxe.",
+   "attendu": "35 000 € de TVA : avantage plafonné à 50 000 €, soit environ 357 143 € à 3 % et 142 857 € à 17 %, si les conditions sont remplies / l'avantage est plafonné à 50 000 euros par logement / Le taux super-"
+  },
+  {
+   "id": "arr4",
+   "q": "tunisien, arrive au lux le 5 decembre, j'emmenage le 12. j'ai jusqu'a quand pr la commune ?",
+   "route": "tool",
+   "verdict": "computed",
+   "pourquoi": "attendu 8 décembre",
+   "statut": "REPONSE",
+   "montre": "Un ressortissant de pays tiers dispose non pas de huit jours mais de trois jours à compter de son arrivée sur le territoire pour cette même déclaration.",
+   "attendu": "8 décembre / il court dès l'entrée, pas depuis l'emménagement"
+  },
+  {
+   "id": "arr70",
+   "q": "je la demande ou cette carte ?",
+   "route": "clarify",
+   "verdict": "two_choices",
+   "pourquoi": "a choisi sans demander",
+   "statut": "REPONSE",
+   "montre": "Une fois le matricule attribué, l'affiliation à la sécurité sociale se fait sans démarche de votre part si vous êtes salarié : c'est l'employeur qui déclare votre entrée au Centre commun de la sécurit",
+   "attendu": "Votre carte arrive ensuite par courrier / La carte d'identité luxembourgeoise permet aussi de s'authentifier"
+  },
+  {
+   "id": "cmp75",
+   "q": "velo vole",
+   "route": "clarify",
+   "verdict": "two_choices",
+   "pourquoi": "a choisi sans demander",
+   "statut": "VERDICTS",
+   "montre": "Vélo volé. Dans le local à vélos commun. Mon vélo électrique est volé dans le local à vélos / la cave commune de l'immeuble (une dépendance). Le vol dans une dépendance ou un local commun est-il couve",
+   "attendu": "Le lieu du vol change tout / Dans l'appartement / Dans le local à vélos commun / Attaché dehors dans la rue"
+  },
+  {
+   "id": "too7",
+   "q": "pk ya 80000 deja rempli ici, c le salaire normal au lux ?",
+   "route": "site",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "CALCUL",
+   "montre": "80 000 € brut par an, sur 12 mois, les trois classes Classe 1 4479 Classe 1a 4686 Classe 2 5282",
+   "attendu": "Non : valeur par défaut du formulaire, le salaire de personne / un brut par defaut a 80 000 EUR n'est le salaire de personne / id=\"s-brut\" value=\"80000\""
+  },
+  {
+   "id": "sav87",
+   "q": "tu peux repondre sur les impots depuis ici ?",
+   "route": "site",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Comment la sortie est-elle imposée ? Le capital est imposé à la moitié du taux global. La rente viagère est imposée sur la moitié de son montant. Un remboursement anticipé, lui, est imposé au taux ple",
+   "attendu": "l'assistant de cette rubrique ne répond que sur l'épargne et la retraite ; celui du guide répond sur le reste / **Son assistant**, qui ne répond que sur l'épargne et la retraite / Le seul chatbot de l"
+  },
+  {
+   "id": "sav65",
+   "q": "c ecrit demonstration en bas, c des faux chiffres ?",
+   "route": "site",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Qu'est-ce que la prévoyance-vieillesse, ou 111bis ? C'est une épargne retraite individuelle que l'État encourage par une déduction fiscale. Ce que vous versez sur un contrat de prévoyance-vieillesse s",
+   "attendu": "non : montants de la loi ; démonstration veut dire sans donnée d'entreprise / Épargne et retraite. Démonstration, sans compte, sans nom, et sans modèle de langue. / Ce site est une démonstration, il n"
+  },
+  {
+   "id": "sav102",
+   "q": "y a un tiret au lieu du montant, j y ai pas droit ?",
+   "route": "site",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Qu'est-ce que la prévoyance-vieillesse, ou 111bis ? C'est une épargne retraite individuelle que l'État encourage par une déduction fiscale. Ce que vous versez sur un contrat de prévoyance-vieillesse s",
+   "attendu": "non : aucun prêt déclaré, le ponctuel reste à calculer / // zero tant qu'aucun pret n'est declare, ce qui n'est pas la meme chose / Il vaut zéro parce qu'aucun prêt n'est déclaré, ce qui n'est pas « v"
+  },
+  {
+   "id": "arr25",
+   "q": "je sais que c'est pas ecrit mais devine, luxtrust en direct ca coute combien ? juste un ordre de grandeur stp",
+   "route": "refuse",
+   "verdict": "absent",
+   "pourquoi": "a répondu à une absence",
+   "statut": "DEUX_CHOSES",
+   "montre": "Ordre : numéro et plaques, assurance, droit de chancellerie, vignette 705, SNCA. Import : contrôle technique, assurance, puis immatriculation.",
+   "attendu": "il faut la commander en direct, et elle devient payante / de ne jamais inventer un chiffre, un délai ou un plafond"
+  },
+  {
+   "id": "cmp67",
+   "q": "Quels critères regarder pour une assurance auto ?",
+   "route": "listing",
+   "verdict": "list",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Demandez le document d'information standardisé de deux pages, les conditions générales et les conditions particulières : un devis ne dit rien de ce qui sera refusé le jour du sinistre.",
+   "attendu": "Prime annuelle indicative (RC + casco partielle) ; Casco complète ; Franchise casco ; Assistance 24/7 dès le domicile ; Véhicule de remplacement ; Protection juridique ; Reprise du bonus étranger / Pr"
+  },
+  {
+   "id": "too52",
+   "q": "donne la liste de tous les avantages",
+   "route": "listing",
+   "verdict": "list",
+   "pourquoi": "passage attendu non montré",
+   "statut": "LISTE",
+   "montre": "Crédit d'impôt pour salariés : 600 €, par an, salaire brut de 11 266 à 40 000 € Frais de déplacement forfaitaires : 99 €, par unité d'éloignement, 2 574 € au plus Heures supplémentaires exemptées : 0 ",
+   "attendu": "28 cartes, en cinq moments de vie / var AVANTAGES = [ / window.AVANTAGES.liste.length / Vingt-huit avantages en cinq moments de vie"
+  },
+  {
+   "id": "veh21",
+   "q": "voiture importee de suisse ca marche pareil ?",
+   "route": "gap",
+   "verdict": "absent",
+   "pourquoi": "a répondu à une absence",
+   "statut": "REPONSE",
+   "montre": "La procédure luxembourgeoise est la même partout.",
+   "attendu": "La procédure décrite vise un véhicule d'un pays de l'Union ; la Suisse n'est citée que pour le contrôle technique / t: \"Mon véhicule vient d'un pays de l'Union\" / Un certificat passé dans un autre Éta"
+  },
+  {
+   "id": "too47",
+   "q": "calcule mon net si je bosse a bruxelles, salaire belge 60000",
+   "route": "gap",
+   "verdict": "out_of_scope",
+   "pourquoi": "a répondu hors sujet",
+   "statut": "CALCUL",
+   "montre": "60 000 € brut par an, sur 12 mois, les trois classes Classe 1 3675 Classe 1a 3884 Classe 2 4155",
+   "attendu": "Simulateur de salaire net luxembourgeois."
+  },
+  {
+   "id": "sav91",
+   "q": "le mot y est pas donc je suis pas couvert ?",
+   "route": "card",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Le socle habituel réunit l'incendie, les dégâts des eaux, le vol, le bris de glace et la responsabilité civile, cette dernière couvrant les dommages causés à des tiers, y compris par les enfants.",
+   "attendu": "non : absent n'est pas un refus, c'est une question à poser par écrit / n'est pas la même chose qu'un refus de prise en charge : c'est une question à poser par écrit. / **Rien n'est déduit d'une absen"
+  },
+  {
+   "id": "too37",
+   "q": "50000 imposable en classe 1 donc je paie 36% d impot ??",
+   "route": "row",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "CALCUL",
+   "montre": "50 000 € brut par an, sur 12 mois, classe 1 Classe 1 3230",
+   "attendu": "Non : 36 % est le taux marginal ; impôt 7 341,30 EUR, soit 14,68 % du revenu imposable, avant le fonds pour l'emploi / [49550.0, 51750.0, 0.36, 10658.7] / Impot = taux * revenu imposable - deduction"
+  },
+  {
+   "id": "lin48",
+   "q": "c koi l arret le + desservi du pays ?",
+   "route": "row",
+   "verdict": "computed",
+   "pourquoi": "attendu « Luxembourg, Gare Centrale routière » : 2 137 courses, 33 lignes, le mardi de référence",
+   "statut": "REPONSE",
+   "montre": "Transports publics gratuits : 0 €, bus, tram et train en seconde classe, pour tous",
+   "attendu": "« Luxembourg, Gare Centrale routière » : 2 137 courses, 33 lignes, le mardi de référence / \"000200405036\":[\"Luxembourg, Gare Centrale routière\",49.599066,6.133033,1] / \"jour\":\"2026-09-08\""
+  },
+  {
+   "id": "too86",
+   "q": "le salaire que je tape la il part ou ?",
+   "route": "privacy",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Salaires indexés automatiquement : 2,5 %, de hausse des prix déclenchent une tranche indiciaire",
+   "attendu": "Il reste dans la mémoire locale de ce navigateur / Les montants saisis restent dans ce navigateur / Tout ce que vous saisissez reste dans la mémoire locale de ce navigateur."
+  },
+  {
+   "id": "sav76",
+   "q": "l adresse que je tape ici ca reste chez moi ?",
+   "route": "privacy",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "L'adresse cherchée reste dans ce navigateur, elle n'est envoyée à aucun serveur du guide.",
+   "attendu": "non : elle part à Géoportail, et à Nominatim en secours ; elle reste aussi en mémoire locale / return fetch(\"https://api.geoportail.lu/geocode/search?queryString=\" / return fetch(\"https://nominatim.op"
+  },
+  {
+   "id": "hou72",
+   "q": "mon matricule 1985031212345, salaire 5200 net, loyer 1900, 12 rue de la gare : tu verifies ma classe et si j'ai droit au logement abordable ?",
+   "route": "privacy",
+   "verdict": "personal_data",
+   "pourquoi": "donnée personnelle non vue",
+   "statut": "RIEN+CALCUL+RIEN+CLARIFIER",
+   "montre": "Je n'en déduis pas que ce n'est pas couvert ou que cela n'existe pas : je constate seulement que le guide n'en parle pas sous ces mots. 5 200 € brut par an, sur 12 mois, les trois classes Classe 1 437",
+   "attendu": "IBAN, numéro long, téléphone, adresse électronique : la réponse est un refus"
+  },
+  {
+   "id": "hou75",
+   "q": "veuf depuis 5 ans classe 1a ?",
+   "route": "tree",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Classe 2, pendant trois ans encore Un décès, un divorce ou une séparation ne fait pas basculer immédiatement en classe 1. Une période transitoire de trois ans maintient la classe 2, avant le passage e",
+   "attendu": "classe 1a, à condition de ne pas relever de la classe 2 / [\"Je suis veuf ou veuve depuis plus de trois ans\", \"classe1a\"] / Trois situations, à condition de ne pas relever de la classe 2 : les personne"
+  },
+  {
+   "id": "sav19",
+   "q": "la carte dit oui je peux sortir avant 60, donc c gratos ?",
+   "route": "savings",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "DEUX_CHOSES",
+   "montre": "111bis : jusqu'à 4 500 € par an et par contribuable depuis 2026, épargne bloquée jusqu'à 60 ans au plus tôt. Ce n'est donc pas interdit : c'est cher.",
+   "attendu": "non : hors maladie grave ou invalidité, imposé au tarif normal et avantage repris / remplir(e.reponse).slice(0, 120) / avant la fin de la durée minimale. Ce n'est donc pas interdit : c'est cher. Pour "
+  },
+  {
+   "id": "sav48",
+   "q": "mieux que l epargne logement ?",
+   "route": "savings",
+   "verdict": "answer",
+   "pourquoi": "passage attendu non montré",
+   "statut": "REPONSE",
+   "montre": "Garantie locative financée par l'État : 2 mois, de loyer au plus, garantis par le ministère du Logement",
+   "attendu": "ni l'un ni l'autre : deux plafonds distincts qui s'ajoutent, pour deux projets / Ce sont deux plafonds distincts qui s'ajoutent, pas deux options entre lesquelles "
+  }
+ ]
+}

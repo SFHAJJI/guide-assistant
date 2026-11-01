@@ -61,6 +61,7 @@ const pct = (k, n) => (n >= 20 ? ` (${Math.round(100 * k / n)} %)` : "");
 const ligne = (nom, t) => ({ tranche: nom, n: t.n, "réponses justes": t.juste + pct(t.juste, t.n), "erreurs affirmées": t.faux + pct(t.faux, t.n), "sans réponse, dit": t.prudent + pct(t.prudent, t.n), "outil non lu": t.coupe });
 const ms = (appels || []).map(x => x.ms).sort((a, b) => a - b);
 const sortie = {
+  frais: true,
   n: Q.length, commit: COMMIT, date: new Date().toISOString().slice(0, 10), regles,
   colonnes: ["tranche", "n", "réponses justes", "erreurs affirmées", "sans réponse, dit", "outil non lu"],
   tranches: [
