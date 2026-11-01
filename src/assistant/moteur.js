@@ -221,7 +221,9 @@
         let s = 0;
         for (const m of sc.mots) s += poids(m);
         s += Math.min(sc.dico, 4);
-        const couverture = stems.length ? sc.mots.size / stems.length : 0;
+        const motsConcept = sc.dico ? row.concepts.flatMap(f => content(f.mot).map(stem)) : [];
+        const couvert = new Set([...sc.mots, ...motsConcept.filter(x => stems.includes(x))]);
+        const couverture = stems.length ? couvert.size / stems.length : 0;
         if (typeRe && typeRe.test(l.plain) && (sc.mots.size || sc.dico)) { s += 3; sc.valeur = 1; }
         const titreSt = new Set(content(l.s + " " + (pageById.get(l.p)?.titre || "")).map(stem));
         if (stems.some(x => titreSt.has(x))) { s += 1.5; sc.titre = 1; }
@@ -510,7 +512,7 @@
         const motsAbsents = f.stems.filter(x => !inv.has(x));
         const assezFort = x => row.epingle ? x.s > 0
           : motsAbsents.length && x.couverture < 0.6 ? false
-          : (x.sc.mots.size >= 2 && x.couverture >= 0.5) || ((x.sc.dico >= 1 || x.sc.dicoPage) && x.couverture >= 0.34) || (f.stems.length === 1 && x.couverture === 1);
+          : (x.sc.mots.size >= 2 && x.couverture >= 0.5) || ((x.sc.dico >= 1 || x.sc.dicoPage) && x.couverture >= 0.33) || (f.stems.length === 1 && x.couverture === 1);
         if (!assezFort(c) && !modele) { T.push({ qui: "code", etape: "Refus", detail: `meilleure ligne trop faible (couverture ${c.couverture.toFixed(2)}${motsAbsents.length ? ", mots absents : " + motsAbsents.join(", ") : ""})` }); return null; }
         const savingsDansMarge = f.top.slice(0, 4).some(x => x.l.nomodel && c.s - x.s < MIN_MARGE);
         if (!clair && savingsDansMarge && !c.l.nomodel) {
@@ -535,7 +537,7 @@
         let manque = null;
         if (typeRe && !typeRe.test(c.l.plain)) {
           // D27: a number was asked. Is it on another line of this place?
-          const voisine = L.filter(x => x.g === c.l.g && typeRe.test(x.plain))[0];
+          const voisine = c.l.row ? null : L.filter(x => x.g === c.l.g && typeRe.test(x.plain))[0];
           if (voisine) lignes.unshift(vue(voisine));
           else if (row.type === "montant") manque = "NE_CHIFFRE_PAS";
           else if (row.type === "duree") manque = "NE_DATE_PAS";
