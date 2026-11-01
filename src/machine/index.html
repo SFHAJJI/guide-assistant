@@ -6,39 +6,82 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>La mécanique de l'assistant</title>
 <style>
-  :root { color-scheme: light dark; }
-  body { font: 15px/1.45 system-ui, sans-serif; margin: 0; padding: 20px; }
-  h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 17px; margin: 18px 0 6px; }
-  nav { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
-  nav button { padding: 6px 12px; border: 1px solid rgba(128,128,128,.5); background: transparent; color: inherit; border-radius: 6px; cursor: pointer; }
-  nav button.on { border-color: #0b6b3a; font-weight: 700; }
-  table { border-collapse: collapse; font-size: 13px; width: 100%; }
-  td, th { border-top: 1px solid rgba(128,128,128,.3); padding: 4px 6px; text-align: left; vertical-align: top; }
-  th { position: sticky; top: 0; background: Canvas; cursor: pointer; }
-  .cote { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .cote > div { min-width: 0; max-height: 70vh; overflow: auto; border: 1px solid rgba(128,128,128,.3); padding: 8px; }
-  .doc p { margin: 0 0 6px; } .doc h3 { margin: 8px 0 4px; font-size: 14px; }
+  :root { color-scheme: light dark; --bleu: #0b4a9e; --fond: #f4f7fb; --bord: rgba(100,116,139,.28); --carte: #fff; --texte: #1b2433; --doux: #5b6778; --modele: #8a3fb0; --code: #0b6b3a; }
+  @media (prefers-color-scheme: dark) { :root { --bleu: #7fb2ff; --fond: #10151d; --bord: rgba(148,163,184,.25); --carte: #18202b; --texte: #e6ebf2; --doux: #9aa6b6; --modele: #cf9bea; --code: #6fd39c; } }
+  body { font: 15px/1.5 Inter, system-ui, sans-serif; margin: 0; background: var(--fond); color: var(--texte); }
+  .haut { background: var(--carte); border-bottom: 1px solid var(--bord); padding: 22px clamp(16px, 4vw, 40px) 0; }
+  .corps { padding: 20px clamp(16px, 4vw, 40px) 60px; max-width: 1240px; }
+  a { color: var(--bleu); }
+  h1 { font-size: 24px; margin: 0 0 6px; letter-spacing: -.01em; } h2 { font-size: 17px; margin: 26px 0 8px; } h3 { font-size: 15px; margin: 0 0 6px; }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; margin: 14px 0 0; }
+  nav button { padding: 9px 14px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--doux); cursor: pointer; font: inherit; font-weight: 600; }
+  nav button.on { border-color: var(--bleu); color: var(--bleu); }
+  table { border-collapse: collapse; font-size: 13.5px; width: 100%; background: var(--carte); }
+  td, th { border-top: 1px solid var(--bord); padding: 7px 9px; text-align: left; vertical-align: top; }
+  th { position: sticky; top: 0; background: var(--carte); font-weight: 600; color: var(--doux); }
+  .cadre { background: var(--carte); border: 1px solid var(--bord); border-radius: 12px; overflow: hidden; }
+  .cote { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+  .cote > div { min-width: 0; max-height: 70vh; overflow: auto; background: var(--carte); border: 1px solid var(--bord); border-radius: 12px; padding: 12px; }
+  .doc p { margin: 0 0 6px; } .doc h3 { margin: 10px 0 4px; font-size: 14px; }
   .mono { font-family: ui-monospace, monospace; font-size: 12px; }
-  .note { font-size: 13px; opacity: .85; max-width: 760px; }
-  select, input { font: inherit; padding: 3px; }
-  .bas { max-height: 62vh; overflow: auto; }
-  tr.sel td { background: rgba(255,230,128,.35); }
+  .note { font-size: 14px; color: var(--doux); max-width: 820px; margin: 0 0 10px; }
+  select, input { font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--bord); background: var(--carte); color: inherit; }
+  .bas { max-height: 62vh; overflow: auto; border: 1px solid var(--bord); border-radius: 12px; }
+  .briques { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin: 6px 0 20px; }
+  .brique { background: var(--carte); border: 1px solid var(--bord); border-radius: 14px; padding: 16px; }
+  .brique .num { font-size: 12px; font-weight: 700; color: var(--bleu); text-transform: uppercase; letter-spacing: .05em; }
+  .brique p { font-size: 14px; margin: 0 0 8px; }
+  .qui { display: inline-block; font-size: 12px; font-weight: 600; margin-right: 8px; }
+  .qui.code { color: var(--code); } .qui.modele { color: var(--modele); }
+  .chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0 18px; }
+  .chiffre { background: var(--carte); border: 1px solid var(--bord); border-radius: 12px; padding: 12px 14px; }
+  .chiffre b { display: block; font-size: 24px; letter-spacing: -.01em; } .chiffre span { font-size: 13px; color: var(--doux); }
   @media (max-width: 800px) { .cote { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
+<header class="haut">
 <h1>La mécanique de l'assistant</h1>
-<p class="note">Le modèle comprend la question. Le guide donne la réponse. Le code calcule et décide. <a href="../guide/">Ouvrir le guide</a>. <a href="../essais/">Neuf exemples</a>. La trace complète de chaque réponse, avec le JSON de chaque étape, est sous la réponse.</p>
+<p class="note">Le modèle comprend la question. Le guide donne la réponse. Le code calcule et décide. <a href="../guide/">Ouvrir le guide</a> · <a href="../essais/">Neuf exemples</a> · <a href="https://github.com/SFHAJJI/guide-assistant">Le code</a></p>
 <nav id="tabs"></nav>
-<main id="vue"></main>
+</header>
+<main id="vue" class="corps"></main>
 <script src="../guide/assistant/dico.js"></script>
 <script src="../guide/assistant/declare.js"></script>
+<script src="../guide/assistant/texte.js"></script>
+<script src="../guide/assistant/question.js"></script>
+<script src="../guide/assistant/recherche.js"></script>
+<script src="../guide/assistant/decide.js"></script>
+<script src="../guide/assistant/reponse.js"></script>
 <script src="../guide/assistant/moteur.js"></script>
 <script>
 const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
 const vue = document.getElementById("vue");
 let X, M;
-const TABS = { "Parsing": parsing, "Aiguillage": aiguillage, "Mesures": mesures, "Limites": limites };
+const TABS = { "Les quatre briques": briques, "Parsing": parsing, "Aiguillage": aiguillage, "Mesures": mesures, "Limites": limites };
+const SLUG = { "Les quatre briques": "briques", "Parsing": "parsing", "Aiguillage": "aiguillage", "Mesures": "mesures", "Limites": "limites" };
+
+function briques() {
+  vue.innerHTML = "";
+  vue.appendChild(el("p", "note", "Une question traverse quatre étapes. La première a lieu une seule fois, à la construction du site. Sous chaque réponse, la trace montre chaque étape, marquée code ou modèle, avec son JSON."));
+  const b = el("div", "briques");
+  [
+    ["1", "Lire le guide", "Le guide est lu une fois et rangé dans des tables : une ligne par phrase, élément de liste ou rangée de tableau, chacune avec son adresse sur la page. C'est ce qui permet de surligner.", "Tout en code. Rien du guide n'est exécuté.", null, "Parsing"],
+    ["2", "Comprendre la question", "La question devient une ligne : texte corrigé, concepts, forme, type de réponse attendu, découpage si elle en contient plusieurs. La page ouverte devient la première portée quand la question la montre.", "En code d'abord.", "Le modèle lit la question quand le code ne reconnaît pas les mots.", null],
+    ["3", "Trouver le bon endroit", "Une fonction, decide(), choisit la route. Les données en rangées sont interrogées comme des tables. Le texte passe par un filtre : le plan du guide, les mots, le dictionnaire, le type de valeur.", "Le code décide de la route.", "Si le code hésite, un modèle classe les candidats et un second vérifie le choix.", "Aiguillage"],
+    ["4", "Répondre", "La réponse a un type : réponse, calcul, liste, le guide dit deux choses, je n'ai pas trouvé. La phrase est celle du guide, retrouvée par son identifiant, et elle est surlignée sur sa page.", "Le code assemble la réponse.", "Deux lectures séparées doivent s'accorder pour afficher un oui ou un non. Le modèle n'écrit jamais la phrase.", "Mesures"],
+  ].forEach(([n, t, d, code, modele, tab]) => {
+    const c = el("article", "brique");
+    c.appendChild(el("div", "num", "Brique " + n));
+    c.appendChild(el("h3", null, t));
+    c.appendChild(el("p", null, d));
+    const q = el("p"); q.appendChild(el("span", "qui code", "code")); q.append(code); c.appendChild(q);
+    if (modele) { const m = el("p"); m.appendChild(el("span", "qui modele", "modèle")); m.append(modele); c.appendChild(m); }
+    if (tab) { const a = el("a", null, "Voir : " + tab); a.href = "#" + SLUG[tab]; c.appendChild(a); }
+    b.appendChild(c);
+  });
+  vue.appendChild(b);
+}
 
 function table(rows, cols) {
   const t = el("table"); const h = el("tr");
@@ -67,7 +110,7 @@ function parsing() {
   choix.addEventListener("change", montrer); choix.value = "vehicule"; montrer();
   vue.appendChild(el("h2", null, "Les tables, en CSV"));
   const liens = el("p");
-  ["pages", "plan", "lignes", "rangees", "faq", "parcours", "renvois"].forEach(n => { const a = el("a", null, n + ".csv"); a.href = `../guide/assistant/tables/${n}.csv`; liens.append(a, " · "); });
+  ["pages", "plan", "lignes", "rangees", "faq", "parcours", "renvois", "communes"].forEach(n => { const a = el("a", null, n + ".csv"); a.href = `../guide/assistant/tables/${n}.csv`; liens.append(a, " · "); });
   vue.appendChild(liens);
   vue.appendChild(el("h2", null, "Le dictionnaire"));
   vue.appendChild(el("p", "note", "Les mots-clés de l'auteur, plus mes synonymes. Personne ne l'a encore validé : l'expert, c'est l'auteur du guide. Une correction de sa part est une ligne de plus."));
@@ -92,40 +135,61 @@ const DECLARE_LIGNES = () => [
 
 async function aiguillage() {
   vue.innerHTML = "";
-  vue.appendChild(el("p", "note", "Une seule fonction, decide(), décide de la route. Le modèle n'y entre jamais. Chaque règle a son test."));
+  vue.appendChild(el("p", "note", "Une seule fonction, decide(), choisit la route, dans cet ordre. Le modèle n'y entre jamais."));
   const m = await fetch("mesures.json").then(r => r.ok ? r.json() : null).catch(() => null);
   vue.appendChild(table(M.REGLES.map(r => ({ règle: r[0], condition: r[1], route: r[2], "questions de test": m?.regles?.[r[0]] ?? "" })), ["règle", "condition", "route", "questions de test"]));
   vue.appendChild(el("h2", null, "Les appels au modèle"));
   vue.appendChild(table([
-    { appel: "parse", quand: "aucun concept trouvé par le code", rend: "des identifiants de concepts d'une liste fermée, une forme, un type, des termes de recherche", "si échec": "la ligne du code, et la trace le dit" },
+    { appel: "compréhension", quand: "aucun concept trouvé, un mot inconnu du guide, ou une longue question", rend: "des identifiants de concepts d'une liste fermée, une forme, un type, des termes de recherche", "si échec": "la ligne du code, et la trace le dit" },
     { appel: "vecteurs", quand: "marge plate : ajoute au dossier les passages proches", rend: "des identifiants de lignes. Une voix de plus, jamais pour conclure à une absence", "si échec": "le dossier reste celui du code" },
     { appel: "arbitre", quand: "marge plate, 10 candidats au plus", rend: "un identifiant et une raison", "si échec": "la meilleure ligne du code, signalée non arbitrée" },
-    { appel: "vérification", quand: "seulement sur le choix de l'arbitre, par un modèle d'une autre famille", rend: "ce passage répond, ou non", "si échec": "s'il ne répond pas : rien dans le guide sous ces mots" },
+    { appel: "vérification", quand: "seulement sur le choix de l'arbitre, par un modèle d'une autre famille", rend: "ce passage répond, ou non", "si échec": "s'il ne répond pas : je n'ai pas trouvé, et le passage est montré comme le plus proche" },
     { appel: "lire", quand: "question oui/non, sur la ligne de la règle", rend: "oui, non ou ça dépend, avec les identifiants des lignes", "si échec": "la règle seule, sans étiquette" },
     { appel: "seconde lecture", quand: "seulement si une étiquette oui/non va s'afficher", rend: "son propre oui, non ou ça dépend, sans voir le premier", "si échec": "désaccord : la règle seule" },
   ], ["appel", "quand", "rend", "si échec"]));
   vue.appendChild(el("p", "note", "Le modèle n'écrit jamais la phrase de la réponse. Il écrit trois autres choses, marquées comme telles : des termes de recherche, une raison dans la trace, des reformulations proposées quand une question a plusieurs sens."));
 }
 
+const LIBELLES = {
+  verdict: { answer: "La réponse est dans le guide", computed: "Il faut calculer", absent: "Le guide n'en parle pas", conflict: "Le guide dit deux choses", out_of_scope: "Hors sujet, ou à refuser", list: "Une liste", two_choices: "La question a plusieurs sens", personal_data: "Une donnée personnelle" },
+  style: { slang: "Langage familier", pointing: "Montre la page ouverte (« ça », « ici »)", short: "Très court", sms: "Style SMS", clean: "Écriture soignée", de: "En allemand", hostile: "Hostile", en: "En anglais", typo: "Avec des fautes", pt: "En portugais", own_words: "Avec ses propres mots" },
+  route: { row: "Un chiffre d'une table", conflict: "Un désaccord du guide", gap: "Un trou du guide", tool: "Un outil du guide", site: "Le site lui-même", fiche: "Une fiche", faq: "Une question fréquente", refuse: "À refuser", card: "Une carte d'aide", clarify: "À préciser", savings: "L'épargne", privacy: "Les données personnelles", listing: "Une liste", guided: "Le parcours", case: "Un cas concret", tree: "L'arbre des classes", smalltalk: "Une politesse" },
+};
+const COLS = { "réponses justes": "Bonne réponse", "erreurs affirmées": "Mauvaise réponse", "sans réponse, dit": "Dit ne pas trouver", "outil non lu": "Renvoie vers un outil" };
+
 async function mesures() {
   vue.innerHTML = "";
   const m = await fetch("mesures.json").then(r => r.ok ? r.json() : null).catch(() => null);
   if (!m) { vue.appendChild(el("p", "note", "Mesures en cours.")); return; }
+  if (m.resume) {
+    const c = el("div", "chiffres");
+    m.resume.forEach(([v, t]) => { const d = el("div", "chiffre"); d.appendChild(el("b", null, v)); d.appendChild(el("span", null, t)); c.appendChild(d); });
+    vue.appendChild(c);
+  }
   vue.appendChild(el("p", "note", `${m.n} questions, version ${m.commit}, ${m.date}. Réponses justes et erreurs affirmées vont par paire : refuser tout donnerait zéro erreur. Un pourcentage n'apparaît qu'à partir de 20 questions.`));
-  vue.appendChild(table(m.tranches, m.colonnes));
-  if (m.notes) m.notes.forEach(n => vue.appendChild(el("p", "note", n)));
+  const grp = (titre, cle) => {
+    const rows = m.tranches.filter(t => (cle ? t.tranche.startsWith(cle + " : ") : !/^(route|verdict|style) : /.test(t.tranche))).map(t => { const o = { "": cle ? (LIBELLES[cle][t.tranche.split(" : ")[1]] || t.tranche.split(" : ")[1]) : t.tranche, Questions: t.n }; for (const [a, b] of Object.entries(COLS)) o[b] = t[a]; return o; });
+    if (!rows.length) return;
+    vue.appendChild(el("h2", null, titre));
+    const f = el("div", "cadre"); f.appendChild(table(rows, ["", "Questions", ...Object.values(COLS)])); vue.appendChild(f);
+  };
+  grp("Ce que chaque pièce apporte", null);
+  grp("Selon ce que la question attend", "verdict");
+  grp("Selon la façon de demander", "style");
+  grp("Selon le sujet", "route");
+  if (m.notes) { vue.appendChild(el("h2", null, "Comment lire ces chiffres")); m.notes.forEach(n => vue.appendChild(el("p", "note", n))); }
 }
 
 function limites() {
   vue.innerHTML = "";
   [
     "Mon choix de fond : la thèse de la série s'adresse à un expert qui vérifie, et exclut le grand public. Un nouvel arrivant ne peut pas vérifier. Donc les questions sont bornées au guide, et la phrase affichée n'est jamais écrite par le modèle.",
-    "« Rien dans le guide sous ces mots » n'est pas une preuve d'absence. Mon dictionnaire n'a été validé par personne.",
+    "« Je n'ai pas trouvé » n'est pas une preuve d'absence. Mon dictionnaire n'a été validé par personne.",
     "Les conflits sont ceux que j'ai déclarés après avoir lu les deux lignes. Un conflit non déclaré passe.",
-    "Les cartes, les lignes de transport et les aires de jeux ne sont pas lues : l'assistant envoie vers l'outil et le dit. Les valeurs manquantes sont comptées à part, jamais lues comme non.",
+    "Les lignes de transport, les écoles et les aires de jeux ne sont pas lues : l'assistant envoie vers l'outil et le dit. Les communes du Luxembourg sont lues comme une table ; les communes frontalières ne le sont pas.",
     "La section épargne reste intacte : pas de surlignage, pas de modèle sur ses lignes.",
     "Les comparaisons de contrats portent sur des extraits de quatre contrats anonymisés. Elles ne disent rien du contrat du lecteur et ne classent personne.",
-    "Les questions de test viennent d'un autre auteur et n'ont pas été relues : les erreurs d'étiquette sont comptées à part. La couverture par famille n'a pas été confirmée. Les deux auteurs peuvent partager les mêmes angles morts.",
+    "Les questions de test ont été écrites par une IA, pas par de vrais lecteurs. Elles peuvent être plus dures ou plus faciles que la réalité, et leurs étiquettes peuvent contenir des erreurs.",
     "Une question posée dans une autre langue reçoit la phrase du guide en français. Je n'ai pas construit la traduction.",
     "Le dernier mot sur un oui ou un non revient à deux lectures de deux modèles : si elles divergent, je montre la règle seule. Ce n'est pas une garantie.",
     "Copie du guide à une version figée : ses dates sont celles de cette version.",
@@ -134,10 +198,10 @@ function limites() {
 
 function aller(n) {
   [...document.querySelectorAll("#tabs button")].forEach(b => b.classList.toggle("on", b.textContent === n));
-  history.replaceState(null, "", "#" + n.toLowerCase());
+  history.replaceState(null, "", "#" + SLUG[n]);
   TABS[n]();
 }
-const depuisAdresse = () => Object.keys(TABS).find(n => "#" + n.toLowerCase() === location.hash) || "Parsing";
+const depuisAdresse = () => Object.keys(TABS).find(n => "#" + SLUG[n] === location.hash) || "Les quatre briques";
 window.addEventListener("hashchange", () => { if (X) aller(depuisAdresse()); });
 const nav = document.getElementById("tabs");
 Object.keys(TABS).forEach(n => { const b = el("button", null, n); b.addEventListener("click", () => aller(n)); nav.appendChild(b); });

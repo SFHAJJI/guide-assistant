@@ -1,10 +1,24 @@
 // The only place that talks to the model. Prompts live here, the key stays here, no question text is logged.
 import { createServer } from "node:http";
 
-const { LLM_ENDPOINT, LLM_KEY, MODELE = "gpt-4.1-mini", MODELE_FORT = "", PLAFOND_JOUR = "20000", PORT = "8080" } = process.env;
+const { LLM_ENDPOINT, LLM_KEY, MODELE = "gpt-4.1-mini", MODELE_FORT = "", PLAFOND_JOUR = "20000", PAR_MINUTE = "300", PAR_HEURE = "3000", CLE_MESURE = "", PORT = "8080" } = process.env;
 const ORIGINES = new Set(["https://sfhajji.github.io", "http://localhost:8080"]);
-const VERSION = "v1";
+const VERSION = "v2";
 let jour = "", compte = 0;
+
+// Per visitor, well above what a person can type: one question costs at most about six calls.
+// Past the limit the call is refused and the reader still gets the code's answer, so nobody is ever blocked.
+const visiteurs = new Map();
+function troDeVisites(ip) {
+  const t = Date.now();
+  const v = visiteurs.get(ip) || { minute: t, nMinute: 0, heure: t, nHeure: 0 };
+  if (t - v.minute > 60_000) { v.minute = t; v.nMinute = 0; }
+  if (t - v.heure > 3_600_000) { v.heure = t; v.nHeure = 0; }
+  v.nMinute++; v.nHeure++;
+  visiteurs.set(ip, v);
+  if (visiteurs.size > 50_000) visiteurs.clear();
+  return v.nMinute > +PAR_MINUTE || v.nHeure > +PAR_HEURE;
+}
 
 const obj = (properties, required = Object.keys(properties)) => ({ type: "object", additionalProperties: false, properties, required });
 const str = { type: "string" };
@@ -19,7 +33,7 @@ const TACHES = {
     system: `${SYSTEME_COMMUN}
 Lis la question (fautes, SMS, autre langue possibles) et remplis :
 - corrigee : la question réécrite en français correct, même sens, rien d'ajouté.
-- termes : 3 à 6 mots ou groupes de mots tels que le guide les écrirait probablement (vocabulaire administratif français), pas les mots familiers du lecteur.
+- termes : 3 à 6 mots ou groupes de mots tels que le guide les écrirait probablement (vocabulaire administratif français), pas les mots familiers du lecteur. Si la question renvoie à la page ouverte (ça, ici, ce chiffre), ce sont les mots de cette page qu'elle vise.
 - concepts : les identifiants de la liste fournie qui correspondent, sinon liste vide. N'invente aucun identifiant.
 - type : montant, duree, booleen, definition, procedure ou texte.
 - forme : single, liste ou compte.
@@ -118,12 +132,18 @@ async function embed(corps) {
 createServer(async (req, res) => {
   const origine = req.headers.origin || "";
   const cors = ORIGINES.has(origine) ? { "access-control-allow-origin": origine, vary: "origin" } : {};
-  const fin = (code, o) => { res.writeHead(code, { "content-type": "application/json", ...cors, "access-control-allow-headers": "content-type", "access-control-allow-methods": "POST, OPTIONS" }); res.end(JSON.stringify(o)); };
+  const fin = (code, o) => { res.writeHead(code, { "content-type": "application/json", ...cors, "access-control-allow-headers": "content-type, x-cle-mesure", "access-control-allow-methods": "POST, OPTIONS" }); res.end(JSON.stringify(o)); };
   if (req.method === "OPTIONS") return fin(204, {});
   if (req.url === "/health") return fin(200, { ok: true, modele: MODELE, fort: MODELE_FORT || null });
   const nom = req.url.replace(/^\//, "");
   if (req.method !== "POST" || !(TACHES[nom] || nom === "embed")) return fin(404, { erreur: "route" });
   if (!ORIGINES.has(origine)) return fin(403, { erreur: "origine" });
+  // The grader and the measuring runs carry a key. A reader's page never needs it.
+  const mesure = !!CLE_MESURE && req.headers["x-cle-mesure"] === CLE_MESURE;
+  if (nom === "juger" && !mesure) return fin(403, { erreur: "reservé à la mesure" });
+  // The last address is the one the platform's ingress added; the ones before it can be forged.
+  const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",").pop().trim();
+  if (!mesure && troDeVisites(ip)) return fin(429, { erreur: "limite par visiteur" });
   const auj = new Date().toISOString().slice(0, 10);
   if (auj !== jour) { jour = auj; compte = 0; }
   if (++compte > +PLAFOND_JOUR) return fin(429, { erreur: "plafond du jour" });

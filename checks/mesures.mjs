@@ -4,10 +4,11 @@ import { chromium } from "playwright";
 import { readFileSync, writeFileSync } from "node:fs";
 import { noter, tranches, texteDe } from "../eval/score.mjs";
 
-const [BASE, SET, OUT, COMMIT] = process.argv.slice(2);
+const [BASE, SET, OUT, COMMIT, TITRE] = process.argv.slice(2);
 const Q = readFileSync(SET, "utf8").split("\n").filter(Boolean).map(l => JSON.parse(l));
 const browser = await chromium.launch();
 const page = await (await browser.newContext({ viewport: { width: 1400, height: 900 } })).newPage();
+if (process.env.CLE_MESURE) await page.addInitScript(cle => { window.fetchModele = (u, o) => fetch(u, { ...o, headers: { ...o.headers, "x-cle-mesure": cle } }); }, process.env.CLE_MESURE);
 await page.goto(`${BASE}/guide/`, { waitUntil: "load" });
 await page.evaluate(() => window.ASSISTANT.pret);
 
@@ -60,8 +61,19 @@ await browser.close();
 const pct = (k, n) => (n >= 20 ? ` (${Math.round(100 * k / n)} %)` : "");
 const ligne = (nom, t) => ({ tranche: nom, n: t.n, "réponses justes": t.juste + pct(t.juste, t.n), "erreurs affirmées": t.faux + pct(t.faux, t.n), "sans réponse, dit": t.prudent + pct(t.prudent, t.n), "outil non lu": t.coupe });
 const ms = (appels || []).map(x => x.ms).sort((a, b) => a - b);
+const reponse = v => ["answer", "computed", "list", "conflict", "two_choices"].includes(v);
+const complet = resultats["assistant, modèle activé"];
+const somme = (f, k) => resultats._parVerdict.filter(t => f(t.tranche.split(" : ")[1])).reduce((s, t) => s + t[k], 0);
+const nRep = somme(reponse, "n"), jRep = somme(reponse, "juste");
+const nAut = somme(v => !reponse(v), "n"), jAut = somme(v => !reponse(v), "juste");
 const sortie = {
-  frais: true,
+  titre: TITRE || "",
+  resume: [
+    [`${Math.round(100 * complet.juste / complet.n)} %`, "de bonnes réponses, sur toutes les questions"],
+    [`${Math.round(100 * complet.faux / complet.n)} %`, "de mauvaises réponses affichées comme justes"],
+    [`${jRep} sur ${nRep}`, "bonnes réponses quand le guide a la réponse"],
+    [`${jAut} sur ${nAut}`, "refus justes quand il ne faut pas répondre"],
+  ],
   n: Q.length, commit: COMMIT, date: new Date().toISOString().slice(0, 10), regles,
   colonnes: ["tranche", "n", "réponses justes", "erreurs affirmées", "sans réponse, dit", "outil non lu"],
   tranches: [

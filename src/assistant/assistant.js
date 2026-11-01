@@ -47,7 +47,7 @@
     if (!zone || !index) return;
     const p = pageCourante();
     zone.textContent = "";
-    if (!p || p.id === "panel_accueil") { zone.appendChild(el("span", "vl-titre", "Posez votre question, je réponds avec les phrases du guide.")); return; }
+    if (!p || p.id === "panel_accueil") { zone.appendChild(el("span", "vl-titre", "Je réponds avec les phrases du guide : fiches, questions fréquentes, salaire net, classe d'impôt, sinistres, communes. Pour les lignes de transport, les écoles et les aires de jeux, j'ouvre l'outil.")); return; }
     zone.appendChild(el("span", "vl-titre", `Vous lisez : ${p.titre}${p.onglet ? " › " + p.onglet : ""}`));
     const qs = index.faq.filter(f => f.fiche === p.id).slice(0, 3).map(f => f.q);
     if (!qs.length) index.plan.filter(x => x.page === p.id && x.niveau === 2).slice(0, 3).forEach(x => qs.push(x.titre + " ?"));
@@ -58,7 +58,7 @@
   }
 
   // ---------- Cards ----------
-  const MOTS = { REPONSE: "RÉPONSE", CALCUL: "CALCUL", LISTE: "LISTE", DEUX_CHOSES: "LE GUIDE DIT DEUX CHOSES", RIEN: "RIEN DANS LE GUIDE SOUS CES MOTS",
+  const MOTS = { REPONSE: "RÉPONSE", CALCUL: "CALCUL", LISTE: "LISTE", DEUX_CHOSES: "LE GUIDE DIT DEUX CHOSES", RIEN: "JE N'AI PAS TROUVÉ",
     NE_CHIFFRE_PAS: "LE GUIDE NE LE CHIFFRE PAS", OUTIL: "OUTIL DU GUIDE", REFUS: "JE NE RÉPONDS PAS À CELA", PERSONNEL: "DONNÉE PERSONNELLE", URGENCE: "112",
     VERDICTS: "CE QUE DISENT QUATRE CONTRATS", HORS: "HORS DU GUIDE", REPONSE_SANS: "LE GUIDE NE CALCULE PAS CELA" };
 

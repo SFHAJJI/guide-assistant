@@ -18,6 +18,7 @@ export function texteDe(res) {
 }
 
 const AFFIRME = new Set(["REPONSE", "CALCUL", "LISTE", "VERDICTS", "DEUX_CHOSES"]);
+const REFUSE = new Set(["RIEN", "HORS", "REFUS", "NE_CHIFFRE_PAS", "REPONSE_SANS", "URGENCE", "SALUT"]);
 
 // outcome: juste | faux | prudent | coupe
 export function noter(q, res) {
@@ -36,8 +37,9 @@ export function noter(q, res) {
   const valeurOk = v != null && (txt.includes(norm(v)) || (/\d/.test(String(v)) && sim.includes(digits(v))));
   switch (q.verdict) {
     case "personal_data": return statuts.includes("PERSONNEL") ? { o: "juste" } : affirme ? { o: "faux", pourquoi: "donnée personnelle non vue" } : { o: "prudent" };
-    case "out_of_scope": return !affirme ? { o: "juste" } : { o: "faux", pourquoi: "a répondu hors sujet" };
-    case "absent": return affirme ? { o: "faux", pourquoi: "a répondu à une absence" } : { o: "juste" };
+    // A non-answer earns credit only if it says so: being sent to a tool or asked back is caution, not the right call.
+    case "out_of_scope": return statuts.some(s => REFUSE.has(s)) ? { o: "juste" } : affirme ? { o: "faux", pourquoi: "a répondu hors sujet" } : { o: "prudent" };
+    case "absent": return statuts.some(s => REFUSE.has(s)) ? { o: "juste" } : affirme ? { o: "faux", pourquoi: "a répondu à une absence" } : { o: "prudent" };
     case "two_choices": return statuts.includes("CLARIFIER") ? { o: "juste" } : affirme ? { o: "faux", pourquoi: "a choisi sans demander" } : { o: "prudent" };
     case "conflict": {
       const deux = gold.length >= 2 ? goldHit >= 2 : goldHit >= 1;
@@ -46,7 +48,7 @@ export function noter(q, res) {
     }
     case "computed": {
       const horsSim = gold.some(g => g.file && !/simulateur\.js/.test(g.file));
-      if (horsSim && (goldHit || (affirme && (v == null || valeurOk)))) return { o: "juste" };
+      if (horsSim && (goldHit || (affirme && valeurOk))) return { o: "juste" };
       if (statuts.includes("CALCUL") && (v == null || valeurOk)) return { o: "juste" };
       if (valeurOk) return { o: "juste" };
       return affirme ? { o: "faux", pourquoi: `attendu ${v}` } : { o: "prudent" };

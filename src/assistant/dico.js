@@ -44,15 +44,46 @@ window.DICO = [
   { id: "achat", pages: ["achat", "interets"], mots: ["acheter", "achat", "notaire", "emprunt", "pret immobilier", "credit immobilier", "mortgage", "buy a house"] },
   { id: "dechets", pages: ["dechets"], mots: ["dechets", "poubelle", "recyclage", "valorlux", "trash", "garbage"] },
   { id: "donnees", pages: ["panel_admin"], mots: ["mes donnees", "donnees personnelles", "confidentialite", "cookies", "stocke", "enregistre mes", "envoye", "envoyees", "qui voit", "privacy", "rgpd", "mesure d'audience", "effacer mes"] },
-  { id: "communes", tool: "#cartes", titre: "Cartes et communes", mots: ["__COMMUNES__", "quelle commune", "communes", "quartier", "ecoles autour", "loyer par commune", "prix au m2", "prix du m2"] },
+  { id: "communes", tool: "#cartes", titre: "Cartes et communes", mots: ["__COMMUNES__", "quelle commune", "communes", "commune la moins chere", "commune la plus", "commune la moins", "la commune avec", "commune avec le", "commune ou", "quartier", "ecoles autour", "loyer par commune", "prix au m2", "prix du m2"] },
   { id: "lignes", tool: "#lignes", titre: "Lignes de transport", mots: ["quelle ligne", "horaire", "arret de bus", "temps de trajet"] },
   { id: "jeux", tool: "#jeux", titre: "Aires de jeux", mots: ["aire de jeux", "aires de jeux", "plaine de jeux"] },
   { id: "emprunt_outil", tool: "#simulateur/emprunt", titre: "Simulateur d'emprunt", mots: ["capacite d'emprunt", "combien puis-je emprunter", "mensualite", "mensualites", "how much can i borrow"] },
 ];
 
+// Which column of the commune table a question asks for. The longest match wins. Mine, like the rows above.
+window.MOTS_INDICATEURS = {
+  loyer_appt: ["loyer", "louer", "location", "rent", "miete"],
+  loyer_appt_m2: ["loyer au m2", "loyer du m2", "loyer m2"],
+  prix_appt_m2: ["prix au m2", "prix du m2", "prix m2", "appartement au m2"],
+  prix_maison_m2: ["maison au m2", "prix maison au m2"],
+  prix_appt: ["prix d'un appartement", "prix appartement", "acheter un appartement"],
+  prix_maison: ["prix d'une maison", "prix maison", "acheter une maison"],
+  sal_med: ["salaire", "salaire median", "salaires", "revenu"],
+  sal_moy: ["salaire moyen"],
+  pop: ["population", "habitants", "habitant"],
+  pop_evol: ["croissance de la population", "croissance"],
+  dens: ["densite"],
+  pct_etr: ["etrangers", "residents etrangers"],
+  pct_lux: ["luxembourgeois"],
+  chomage: ["chomage"],
+  age_median: ["age median", "age moyen"],
+  eleves: ["eleves"],
+  eleves_classe: ["eleves par classe"],
+  menages: ["menages"],
+  logements: ["logements"],
+  part_maisons: ["part de maisons"],
+  part_vacants: ["logements vides", "logements vacants", "logements inoccupes", "vacants"],
+};
+
 // Fixed answers of the guide's refusals, from its own rules (index.html:616, README.md, 6.7).
 window.REFUS = [
-  { id: "meilleur_contrat", re: /\b(meilleur|meilleure|plus avantageu\w+|recommande\w*|conseill\w+|lequel choisir|quel assureur)\b.*\b(contrat|assureur|assurance|offre|banque)\b|\b(contrat|assureur|assurance|offre)\b.*\b(meilleur|lequel choisir)\b/,
+  { id: "consignes", re: /\b(ignore|ignorez|oublie|oubliez)\b.*\b(instructions?|consignes?|regles?)\b|\b(ton|votre|your|system) prompt\b/,
+    texte: "Je réponds seulement avec les phrases du guide, et je ne suis pas d'autres consignes. Ma mécanique est publique : le lien « La mécanique » la montre." },
+  { id: "identite_assureur", re: /\b(c'est qui|qui est|qui sont|vrai nom|s'appelle|quel est le nom)\b.*\bassureurs?\b|\bassureurs? [abcd]\b.*\b(c'est qui|qui est|lequel|vrai nom|s'appelle)\b/,
+    texte: "Les assureurs du comparateur sont anonymisés : le guide ne dit pas qui ils sont. Il montre où les contrats divergent et quelles questions poser.", route: "#comparateur", label: "Voir le comparateur" },
+  { id: "meilleur_fonds", re: /\b(meilleur|meilleure|recommande\w*|conseill\w+|quel|quelle)\b.*\b(fonds|placement|investissement|investir)\b/,
+    texte: "Je ne recommande ni fonds ni placement. Le guide explique les règles, il ne classe pas les produits.", route: "prevoyance/#questions", label: "Voir la section épargne" },
+  { id: "meilleur_contrat", re: /\b(meilleur|meilleure|plus avantageu\w+|recommande\w*|conseill\w+|lequel choisir|quel assureur)\b.*\b(contrat|assureur|assurance|offre|banque)\b|\b(contrat|assureur|assurance|offre)\b.*\b(meilleur|lequel choisir|conseill\w+|recommand\w+)\b|\bquelle? (contrat|assureur|assurance)\b.*\b(choisir|prendre)\b/,
     texte: "Je ne désigne pas de meilleur contrat. Le guide ne classe pas les assureurs : il montre ce que disent quatre contrats anonymisés, sinistre par sinistre, à vous de comparer.", route: "#comparateur", label: "Voir le comparateur" },
   { id: "prix_habitation", re: /\b(combien|prix|cout|coute|tarif)\b.*\bassurance habitation\b|\bassurance habitation\b.*\b(combien|prix|cout|coute|tarif)\b/,
     texte: "Le guide ne donne aucun prix d'assurance habitation. Il compare ce que couvrent les contrats, pas ce qu'ils coûtent.", route: "#comparateur", label: "Voir le comparateur" },

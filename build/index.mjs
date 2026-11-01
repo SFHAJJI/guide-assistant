@@ -212,16 +212,19 @@ const stats = {
 };
 mkdirSync(OUT, { recursive: true });
 // Commune names, read so that a question about one goes to the maps tool instead of a wrong page.
-let communes = [];
+let communes = [], tableCommunes = null;
 try {
   const c = collect(join(SITE, "cartes/communes_kb.js"));
   const data = c["window.COMMUNES"] || Object.values(c)[0];
   const liste = Array.isArray(data) ? data : data?.communes || data?.liste || Object.values(data || {}).find(Array.isArray) || [];
   communes = [...new Set(liste.map(x => (x && (x.nom || x.name || x.commune)) || null).filter(n => typeof n === "string" && n.length > 3 && n !== "Luxembourg"))]
-    .map(n => n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    .map(n => n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+    .flatMap(n => (n.includes("-") ? [n, n.replace(/-/g, " ")] : [n]));
+  // The table itself: names, cantons and the 48 figures. Maps and yearly series stay out of the index.
+  tableCommunes = { construit: data.meta?.construit || null, indicateurs: (data.indicateurs || []).map(({ id, nom, unite, fmt, source, aide }) => ({ id, nom, unite, fmt, source, aide })), lignes: liste.map(x => ({ nom: x.nom, canton: x.canton, i: x.i })) };
 } catch (e) { console.error("communes:", e.message); }
 stats.communes = communes.length;
-const index = { communes, stats, pages, plan, lignes, rangees, faq, verdicts, parcours, cartes, entrees, renvois, addrs, arbre, statuts: UI.STATUTS_FR, outils: UI.OUTILS_OFFICIELS };
+const index = { communes, tableCommunes, stats, pages, plan, lignes, rangees, faq, verdicts, parcours, cartes, entrees, renvois, addrs, arbre, statuts: UI.STATUTS_FR, outils: UI.OUTILS_OFFICIELS };
 writeFileSync(join(OUT, "index.json"), JSON.stringify(index));
 
 const csv = (rows, cols) => [cols.join(";"), ...rows.map(r => cols.map(c => {
@@ -238,4 +241,5 @@ for (const [nom, rows, cols] of [
   ["parcours", parcours, ["id", "phase", "t", "fiche", "si", "line"]],
   ["renvois", renvois, ["de", "kind", "vers", "titre"]],
 ]) writeFileSync(join(OUT, "tables", nom + ".csv"), BOM + csv(rows, cols));
+if (tableCommunes) writeFileSync(join(OUT, "tables", "communes.csv"), BOM + csv(tableCommunes.lignes.map(c => ({ nom: c.nom, canton: c.canton, ...c.i })), ["nom", "canton", ...tableCommunes.indicateurs.map(i => i.id)]));
 console.log(JSON.stringify(stats, null, 0));

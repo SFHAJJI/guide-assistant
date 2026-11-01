@@ -83,7 +83,7 @@ for (const [nom, qs, attendu] of J) {
   await p2.screenshot({ path: `shots/${nom}.png` });
   await p2.close();
 }
-for (const [nom, qs, attendu] of [["bougie", "?q=Un%20assur%C3%A9%20laisse%20une%20bougie%20sur%20la%20table%20de%20son%20jardin%20pendant%20ses%20vacances.%20Avec%20la%20chaleur%2C%20la%20bougie%20fond%20et%20ab%C3%AEme%20la%20table.%20Est-ce%20couvert%20%3F", "RIEN DANS LE GUIDE SOUS CES MOTS"], ["sans-modele", "?sans=1&q=combien%20de%20caution%20et%20c%27est%20quoi%20le%20matricule%20%3F", "Deux questions"]]) {
+for (const [nom, qs, attendu] of [["bougie", "?q=Un%20assur%C3%A9%20laisse%20une%20bougie%20sur%20la%20table%20de%20son%20jardin%20pendant%20ses%20vacances.%20Avec%20la%20chaleur%2C%20la%20bougie%20fond%20et%20ab%C3%AEme%20la%20table.%20Est-ce%20couvert%20%3F", "JE N'AI PAS TROUVÉ"], ["sans-modele", "?sans=1&q=combien%20de%20caution%20et%20c%27est%20quoi%20le%20matricule%20%3F", "Deux questions"]]) {
   const p2 = await ctx.newPage();
   await p2.goto(`${BASE}/guide/${qs}`, { waitUntil: "load" });
   await p2.waitForTimeout(800);
@@ -104,7 +104,7 @@ await porte.waitForTimeout(300);
 check("entry page has nine buttons", (await porte.locator("a.essai").count()) === 9);
 await porte.screenshot({ path: "shots/porte.png" });
 await porte.close();
-for (const [ancre, attendu] of [["parsing", "Une page et ses lignes"], ["aiguillage", "Les appels au modèle"], ["mesures", "erreurs affirmées"], ["limites", "Rien dans le guide"]]) {
+for (const [ancre, attendu] of [["briques", "Brique 1"], ["parsing", "Une page et ses lignes"], ["aiguillage", "Les appels au modèle"], ["mesures", "erreurs affirmées"], ["limites", "Je n'ai pas trouvé"]]) {
   const pm = await ctx.newPage();
   pm.on("pageerror", e => fails.push(`machine ${ancre} pageerror: ${e.message}`));
   await pm.goto(`${BASE}/machine/#${ancre}`, { waitUntil: "load" });

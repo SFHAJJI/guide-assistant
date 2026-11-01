@@ -5,9 +5,13 @@ on:
   workflow_dispatch:
     inputs:
       mesurer:
-        description: Run the sealed measurements
-        type: boolean
-        default: false
+        description: Set of questions to measure, for example eval/frais.jsonl. Empty for none.
+        type: string
+        default: ""
+      titre:
+        description: What this set is, in one phrase
+        type: string
+        default: ""
 permissions:
   contents: read
   pages: write
@@ -44,9 +48,11 @@ jobs:
           npx http-server dist -p 8080 -s &
           sleep 2
           node checks/browser.mjs http://localhost:8080
-      - name: Sealed measurements
-        if: ${{ inputs.mesurer }}
-        run: node checks/mesures.mjs http://localhost:8080 eval/sealed.jsonl mesures.json "${GUIDE_COMMIT:0:7}"
+      - name: Measurements
+        if: ${{ inputs.mesurer != '' }}
+        env:
+          CLE_MESURE: ${{ secrets.CLE_MESURE }}
+        run: node checks/mesures.mjs http://localhost:8080 "${{ inputs.mesurer }}" mesures.json "${GUIDE_COMMIT:0:7}" "${{ inputs.titre }}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
