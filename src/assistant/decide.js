@@ -28,33 +28,36 @@
     ["r23", "Question à plusieurs sens, dit par le modèle", "clarifier"],
     ["r24", "La question montre la page ouverte", "page_qa"],
     ["r25", "Un sujet seul, sans question", "fiche_sujet"],
-    ["r26", "Une commune et un chiffre, ou un classement", "table_communes"],
+    ["r26", "Une commune et un chiffre, un seuil ou un classement", "table_communes"],
+    ["r27", "Une question sur l'assistant ou sur le site", "site_qa"],
   ];
 
   window.Briques = window.Briques || {};
   window.Briques.REGLES = REGLES;
-  window.Briques.decide = function ({ REFUS, DECLARE }) {
+  window.Briques.decide = function ({ REFUS, DECLARE, opt }) {
     function decide(row, ctx) {
       const q = row.pq, plan = [];
       const dit = (id, why) => plan.push({ id, route: REGLES.find(r => r[0] === id)[2], why });
       if (/\b(urgence|je sens le gaz|ca sent le gaz|au feu|au secours|crise cardiaque|ne respire|inconscient\w*|me suicider|emergency)\b/.test(q)) { dit("r1"); return plan; }
-      if (/\b[a-z]{2}\d{2}(?:\s?[a-z0-9]{4}){3,}\b/.test(q) || /\b\d{4}\s?\d{4}\s?\d{5}\b/.test(q) || /[a-z0-9._-]+@[a-z0-9-]+\.[a-z]{2,}/.test(q) || /(\+|\b00)\s?\d{2,3}[\s.]?\d{2,3}[\s.]?\d{2,3}/.test(q)) { dit("r2"); return plan; }
+      if (/\b[a-z]{2}\d{2}(?:\s?[a-z0-9]{4}){3,}\b/.test(q) || /\b\d{4}\s?\d{4}\s?\d{5}\b/.test(q) || /[a-z0-9._-]+@[a-z0-9-]+\.[a-z]{2,}/.test(q) || /(\+|\b00)\s?\d{2,3}[\s.]?\d{2,3}[\s.]?\d{2,3}/.test(q) || /\b\d{3}[\s.-]\d{3}[\s.-]\d{3}\b/.test(q) || /\b0\d([\s.-]?\d{2}){4}\b/.test(q) || /\b\d{9,}\b/.test(q)) { dit("r2"); return plan; }
       if (/^(bonjour|salut|bonsoir|hello|coucou|merci|hi|thanks)\b[ ,.!a-z]{0,14}$/.test(q) && row.mots.length <= 1) { dit("r3"); return plan; }
       if (REFUS.some(r => r.re.test(q))) { dit("r4"); return plan; }
+      if ((opt.SITE || window.SITE || []).some(r => r.re.test(q))) { dit("r27"); return plan; }
       if (row.horsSujet) { dit("r21"); return plan; }
       if (row.ambigu && !row.concepts.length) { dit("r23"); return plan; }
       // A word with several senses is asked back, unless the question or the open page already says which.
       const titrePage = plain(ctx.page?.titre || "");
-      const multi = row.concepts.find(c => c.c.sens && !c.c.sens.some(s => s.mots.some(m => q.includes(plain(m)) || titrePage.includes(plain(m)))));
+      const multi = row.concepts.find(c => c.c.sens && !(c.c.seul && (row.mots.length > 1 || ctx.page)) && !c.c.sens.some(s => s.mots.some(m => q.includes(plain(m)) || titrePage.includes(plain(m)))));
       if (multi) { dit("r6", multi.mot); return plan; }
       if (!row.concepts.length && !row.herite && !row.mots.length && !ctx.page) { dit("r7"); return plan; }
       if (!row.concepts.length && !row.herite && row.mots.length === 0 && ctx.page && ctx.page.id) { /* the page is the subject */ }
       // A commune named in a question about something else is not a question for the maps: the table first, then the guide's lines, then the tool.
-      if (row.concepts.some(c => c.id === "communes")) { dit("r26"); dit("r19"); dit("r8"); return plan; }
-      if (row.concepts.some(c => c.c.tool)) { dit("r8"); return plan; }
+      const repliCartes = row.concepts.some(c => c.id === "communes");
+      if (repliCartes || /\b(ou|quelle? commune|quelles? communes)\b.*\b(le plus|la plus|les plus|le moins|la moins|les moins|moins cher\w*|plus cher\w*)\b/.test(q)) dit("r26");
+      if (!repliCartes && row.concepts.some(c => c.c.tool)) { dit("r8"); return plan; }
       // A salary figure is a calculation only if the question is about that salary, not about an aid, a ceiling or the screen.
-      if (/\b(salaire|brut|net|paie|gross|salary)\b/.test(q) && /\d/.test(q.replace(/classe\s*\d\w?/g, "")) && !/\b(belge|bruxelles|francais|allemand|paris|metz|rempli|par defaut|cis|cissm|cim|abattement|plafond|logement|abordable|aides?|primes?|allocations?|droit|eligible|pourquoi|ecrit|affiche|moyen|minimum)\b/.test(q)) dit("r9");
-      else if (/\b(quelle classe|ma classe|quelle est ma classe|which tax class|classe d'impots? pour|dans quelle classe)\b/.test(q) || (/\bclasse\b/.test(q) && /\b(marie|mariee|celibataire|divorce|divorcee|veuf|veuve|pacse)\b/.test(q))) dit("r10");
+      if (/\b(salaire|brut|net|paie|gross|salary|gagne|gagnons|touche|touchons)\b/.test(q) && /\d/.test(q.replace(/classe\s*\d\w?/g, "")) && !/\b(rempli|par defaut|cis|cissm|cim|abattement|plafond|logement|abordable|aides?|primes?|allocations?|droit|eligible|pourquoi|ecrit|affiche|moyen|minimum|prix|maison|appartement|loyer|vendeur|achat|acheter|immobilier|notaire|impatrie\w*)\b/.test(q)) dit("r9");
+      else if (!/\b(employeur|corriger|changer|modifier|erreur|automatique\w*)\b/.test(q) && (/\b(quelle classe|ma classe|quelle est ma classe|which tax class|classe d'impots? pour|dans quelle classe)\b/.test(q) || (/\bclasse\b/.test(q) && /\b(marie|mariee|celibataire|divorce|divorcee|veuf|veuve|pacse)\b/.test(q)))) dit("r10");
       else if (/\b(il me manque|me reste|par ou commencer|ou j'en suis|qu'est ce que je dois faire|que me reste|prochaine etape)\b/.test(q)) dit("r11");
       else {
         if (/\bastuce|retour d'experience\b/.test(q)) dit("r15");
@@ -69,7 +72,7 @@
         if (row.sujetSeul) dit("r25");
         dit("r18");
       }
-      dit("r19"); dit("r20");
+      dit("r19"); dit(repliCartes ? "r8" : "r20");
       return plan;
     }
 

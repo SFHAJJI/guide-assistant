@@ -13,7 +13,7 @@ window.DECLARE = {
   ],
   // Settled by a fact about the reader. kb.js:23 and :861 turn on nationality; `origine` only proposes a default.
   conditions: [
-    { id: "delai_arrivee", quand: ["delai", "huit jours", "jours", "combien de temps", "quand"], concept: "commune_declaration",
+    { id: "delai_arrivee", quand: ["delai", "huit jours", "8 jours", "jours", "combien de temps", "quand"], concept: "commune_declaration",
       fait: "nationalite", question: "De quelle nationalité êtes-vous ?",
       valeurs: {
         ue: { label: "Union européenne, EEE ou Suisse", ligne: { p: "faq", c: "Dans les huit jours suivant l'emménagement" } },

@@ -3,7 +3,7 @@ import { createServer } from "node:http";
 
 const { LLM_ENDPOINT, LLM_KEY, MODELE = "gpt-4.1-mini", MODELE_FORT = "", PLAFOND_JOUR = "20000", PAR_MINUTE = "300", PAR_HEURE = "3000", CLE_MESURE = "", PORT = "8080" } = process.env;
 const ORIGINES = new Set(["https://sfhajji.github.io", "http://localhost:8080"]);
-const VERSION = "v2";
+const VERSION = "v3";
 let jour = "", compte = 0;
 
 // Per visitor, well above what a person can type: one question costs at most about six calls.
@@ -81,9 +81,12 @@ TACHES.relire = { ...TACHES.lire, fort: true };
 TACHES.verifier = {
   fort: true,
   system: `${SYSTEME_COMMUN}
-On te donne une question et un passage du guide. repond = true seulement si le passage donne vraiment l'information demandée, telle quelle. Si le passage parle du même thème sans répondre, ou répond à une question voisine (autre personne, autre cas, autre montant), repond = false. Dans le doute, false.`,
-  schema: obj({ repond: { type: "boolean" }, raison: str }),
-  entree: b => `Question : ${b.question}\nPassage (${b.section}) : ${b.passage}`,
+On te donne une question et les lignes d'un passage du guide, chacune précédée de son identifiant.
+- repond = true si ces lignes donnent l'information demandée, ou si elle se déduit directement d'une phrase (« seule la première classe reste payante » répond à « le train est-il gratuit en première classe »).
+- repond = false si le passage parle du même thème sans répondre, ou répond à une question voisine (autre personne, autre cas, autre montant). Si la question vise un cas précis (un pays, un statut, un montant) que les lignes ne couvrent pas, false. Dans le doute, false.
+- lignes : les identifiants des lignes qui portent la réponse, conditions comprises, et rien d'autre. Liste vide si repond = false.`,
+  schema: obj({ repond: { type: "boolean" }, lignes: strs, raison: str }),
+  entree: b => `Question : ${b.question}\nPassage (${b.section}) :\n${b.passage}`,
 };
 // Offline only: grades a card against the expected answer. Never reaches a reader.
 TACHES.juger = {

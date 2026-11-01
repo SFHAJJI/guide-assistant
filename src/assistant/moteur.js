@@ -54,9 +54,9 @@
       if (row.herite) T.push({ qui: "code", etape: "Suite", detail: `repris de : ${row.herite}` });
 
       // The open page is the first scope when the question points at it, or names nothing of its own.
-      if (ctx.page && !row.herite && !row.partout && L.some(l => l.p === ctx.page.id) && (row.epingle || (row.predicat && row.mots.length <= 1) || (!row.concepts.length && (row.pointe || row.mots.length <= 1)))) row.portee = "page";
+      if (ctx.page && !row.herite && !row.partout && L.some(l => l.p === ctx.page.id) && (row.epingle || row.suite || (row.predicat && row.mots.length <= 1) || (!row.concepts.filter(x => !x.c.seul).length && (row.pointe || row.mots.length <= 1)))) row.portee = "page";
       // What the reader typed, before the model adds its search terms: page_qa decides on this.
-      row.propre = !row.concepts.length || !!row.predicat;
+      row.propre = !row.concepts.length || !!row.predicat || !!row.suite;
       row.motsLecteur = [...row.mots];
 
       // Parse call: only behind a code gate (D31), and never for what the first rules catch.
@@ -64,7 +64,7 @@
       const zeros = row.mots.filter(m => !/\d/.test(m) && !inv.has(stem(m)));
       const premiere = decide(row, ctx)[0].id;
       const motsAvant = [...row.mots];
-      if (modele && row.mots.length && !["r1", "r2", "r3", "r4", "r6", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r25", "r26"].includes(premiere) && (!row.concepts.length || zeros.length || row.mots.length >= 6)) {
+      if (modele && row.mots.length && !["r1", "r2", "r3", "r4", "r6", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r25", "r26", "r27"].includes(premiere) && !row.predicat && (!row.concepts.length || zeros.length || row.mots.length >= 6)) {
         row.appels = (row.appels || 0) + 1;
         const liste = concepts.filter(c => !c.tool).map(c => c.source === "auteur" ? `${c.id}: ${c.mots[0]}` : `${c.id}: ${c.mots.slice(0, 2).join(", ")}`);
         const parse = await modele.parse(row, liste, ctx.page?.titre);
@@ -82,7 +82,8 @@
           if (parse.type && row.type === "texte") row.type = parse.type;
           if (parse.forme && row.forme === "single") row.forme = parse.forme;
           row.langue = parse.langue;
-          if (parse.ambigu && !row.portee) { row.ambigu = true; row.ambiguOptions = parse.options; }
+          // A figure is something code can look for, so it is searched before anyone is asked what it means.
+          if (parse.ambigu && !row.portee && !/\d/.test(row.original)) { row.ambigu = true; row.ambiguOptions = parse.options; }
         } else T.push({ qui: "modèle", etape: "Compréhension", detail: "pas de réponse dans le temps : je continue sans" });
       }
       T.push({ qui: "code", etape: "Question", detail: `${row.concepts.length ? "concept " + row.concepts.map(c => c.mot).join(", ") : "aucun concept"} · ${row.forme} · ${row.type}`, json: publique(row) });

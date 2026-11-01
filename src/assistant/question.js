@@ -51,12 +51,14 @@
         // "délai" or "prix" says what kind of answer is wanted, not what the question is about, even when a page uses it as a tag.
         for (const k of c.cles) if (!(content(k.m).length === 1 && MOTS_DE_TYPE.has(stem(content(k.m)[0]))) && k.re.test(pq)) { found.push({ id: c.id, mot: k.m, source: c.source, c }); break; }
       }
-      // A longer word beats a shorter one found inside it.
-      return found.filter(f => !found.some(g => g !== f && g.mot !== f.mot && g.mot.includes(f.mot) && g.c === f.c));
+      // A longer word beats a shorter one found inside it. A word that only counts when alone ("plafond") gives way to any other concept.
+      const garde = found.filter(f => !found.some(g => g !== f && g.mot !== f.mot && g.mot.includes(f.mot) && g.c === f.c));
+      if (garde.some(f => f.c.seul) && content(pq).length <= 1) return garde.filter(f => f.c.seul);
+      return garde.length > 1 ? garde.filter(f => !f.c.seul) : garde;
     }
 
     function typeDe(pq, brut) {
-      if (/\b(delai|combien de temps|quand|sous combien|valable combien|dans combien|duree|a quel moment|date)\b|\bcombien de (jours?|mois|ans?|annees?|semaines?|heures?)\b/.test(pq)) return "duree";
+      if (/\b(delai|combien de temps|quand|sous combien|valable combien|dans combien|duree|dure|durer|a quel moment|date)\b|\bcombien de (jours?|mois|ans?|annees?|semaines?|heures?)\b/.test(pq)) return "duree";
       if (/\b\w+-(t-)?(il|elle|ils|elles|on|je)\b/.test(String(brut).toLowerCase().replace(/’/g, "'")) && !/^(comment|combien|quel|quelle|quels|quelles|pourquoi|qui|que|ou|quand)\b/.test(pq)) return "booleen";
       if (/^(est[- ]ce|y a|peut on|puis je|dois je|faut il|suis je|ai je|is |can |do |does |am i )/.test(pq)) return "booleen";
       if (/\b(combien|prix|cout|coute|coutent|couter|tarif|montant|plafond|franchise|frais|how much)\b/.test(pq)) return "montant";
@@ -89,7 +91,9 @@
       row.formeCode = row.forme;
       // "c'est gratuit ?": a predicate with nothing it applies to. Its subject is whatever the reader is looking at.
       row.predicat = /^(c'?est|c est|c)\s+(gratuit|payant|obligatoire|combien|cher|long|possible|normal|legal|vrai|automatique|valable)\b/.test(pq);
-      if (row.predicat && !partout) row.pointe = true;
+      // "même en première classe ?": a follow-up to what the page just said.
+      row.suite = /^(meme|aussi)\b/.test(pq) && !partout;
+      if ((row.predicat || row.suite) && !partout) row.pointe = true;
       if (partout) { row.pointe = false; row.epingle = false; }
       // A subject and nothing else: every word belongs to the concept. "luxtrust c payant" is a question, "creches" is not.
       const motsDuSujet = new Set(row.concepts.flatMap(x => x.c.mots.flatMap(m => content(m).map(stem))));

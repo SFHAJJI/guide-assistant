@@ -156,7 +156,6 @@ test("the commune table: a cell, a comparison, a ranking, a missing figure", asy
   assert.strictEqual(rang.parts[0].statut, "LISTE");
   const min = t.lignes.filter(c => c.i.loyer_appt != null).sort((a, b) => a.i.loyer_appt - b.i.loyer_appt)[0];
   assert.ok(rang.parts[0].liste[0].t.startsWith(min.nom));
-  assert.strictEqual((await Mc.repondre("gini de niederanven", {})).parts[0].statut, "OUTIL");
 });
 
 test("a how-to whose passage is refused still opens the right page", async () => {
@@ -201,6 +200,92 @@ test("comparing two communes is one question", async () => {
 
 test("asking for an exact personal tax is refused, even with a salary", async () => {
   assert.strictEqual((await ask("Je gagne 5 200 € brut par mois, dis-moi exactement combien d'impôt je vais payer")).parts[0].statut, "REFUS");
+});
+
+const avecCommunes = () => window.Moteur.creer(index, { DICO: window.DICO.map(d => (d.id === "communes" ? { ...d, mots: d.mots.filter(m => m !== "__COMMUNES__").concat(index.communes) } : d)), REFUS: window.REFUS, DECLARE: window.DECLARE, sim });
+
+test("a phone number never reaches a model, in any common format", async () => {
+  for (const q of ["appelez moi au 621 123 456", "mon gsm 621123456", "tel 06 12 34 56 78", "appelez le 621.123.456"]) assert.strictEqual((await ask(q)).parts[0].statut, "PERSONNEL", q);
+});
+
+test("a salary figure is not mistaken for a phone number", async () => {
+  for (const q of ["65000 brut en classe 1", "classe 1 80 000 brut"]) assert.strictEqual((await ask(q)).parts[0].statut, "CALCUL", q);
+});
+
+test("a commune and a year reads the series, not the latest figure", async () => {
+  const Mc = avecCommunes();
+  const c = index.tableCommunes.lignes.find(x => x.nom === "Wiltz");
+  const i = index.tableCommunes.series.pop.annees.indexOf(1900);
+  const r = await Mc.repondre("population de wiltz en 1900", {});
+  assert.match(r.parts[0].lignesLibres[0], new RegExp(c.s.pop[i].toLocaleString("fr-FR").replace(/\s/g, "\\s")));
+  assert.doesNotMatch(r.parts[0].lignesLibres[0], new RegExp(c.i.pop.toLocaleString("fr-FR").replace(/\s/g, "\\s")));
+});
+
+test("a house rent is not answered with an apartment rent", async () => {
+  assert.strictEqual((await avecCommunes().repondre("loyer d'une maison a mamer", {})).parts[0].statut, "NE_CHIFFRE_PAS");
+});
+
+test("Esch and Luxembourg city are found, and the card says which", async () => {
+  const Mc = avecCommunes();
+  for (const [q, nom] of [["loyer a esch", "Esch-sur-Alzette"], ["loyer a luxembourg", "Luxembourg"]]) {
+    const r = await Mc.repondre(q, {});
+    assert.ok(r.parts[0].lignesLibres?.[0].startsWith(nom), q);
+    assert.ok(r.parts[0].note.some(n => n.includes("J'ai compris")), q);
+  }
+});
+
+test("a ranking needs no word 'commune', and a threshold is a slice", async () => {
+  const Mc = avecCommunes();
+  const t = index.tableCommunes;
+  const rang = await Mc.repondre("ou le chomage est le plus bas", {});
+  const min = t.lignes.filter(c => c.i.chomage != null).sort((a, b) => a.i.chomage - b.i.chomage)[0];
+  assert.ok(rang.parts[0].liste[0].t.startsWith(min.nom));
+  const seuil = await Mc.repondre("communes avec un loyer sous 1400", {});
+  assert.strictEqual(seuil.parts[0].complet.n, t.lignes.filter(c => c.i.loyer_appt != null && c.i.loyer_appt < 1400).length);
+});
+
+test("the Gini exists for the country only, and the card says so", async () => {
+  const r = await avecCommunes().repondre("gini de niederanven", {});
+  assert.match(r.parts[0].texte, /pas le Gini par commune/);
+});
+
+test("a commune named in a salary question still calculates", async () => {
+  assert.strictEqual((await avecCommunes().repondre("je gagne 60000 brut a strassen", {})).parts[0].statut, "CALCUL");
+});
+
+test("the open page: no answer from a case it does not speak of, no verdict on a bare predicate", async () => {
+  const perm = await ask("et pour un permis marocain ici ?", "permis");
+  assert.ok(!(perm.parts[0].lignes || []).some(l => /permis européen/i.test(l.t)));
+  const obl = await ask("c'est obligatoire ?", "vehicule");
+  assert.ok(obl.parts[0].statut === "CLARIFIER" || /dit de « obligatoire »/.test(obl.parts[0].titre));
+  const cong = await ask("c'est combien ?", "conges");
+  assert.match(cong.parts[0].lignes[0].t, /[Vv]ingt-six jours/);
+  const imp = await ask("ca dure combien", "impatries");
+  assert.ok(imp.parts[0].lignes.some(l => /\b(neuf|huit|\d+) (ans|années)/i.test(l.t)));
+});
+
+test("salaries: a year is not the amount, and every assumption is stated or stopped", async () => {
+  assert.strictEqual((await ask("salaire en 2026 de 60000 brut")).parts[0].calc.entrees.brut_annuel, 60000);
+  assert.ok((await ask("30000 brut a mi temps")).parts[0].note.some(n => /temps plein/.test(n)));
+  assert.ok((await ask("classe 1 80 000 brut 2 enfants")).parts[0].note.some(n => /enfants/.test(n)));
+  assert.strictEqual((await ask("je touche 4000 brut par mois en france")).parts[0].statut, "REPONSE_SANS");
+  assert.strictEqual((await ask("mon conjoint gagne 40000 et moi 80000 on paye combien")).parts[0].statut, "REPONSE_SANS");
+  assert.strictEqual((await ask("je gagne 5000 par mois")).parts[0].statut, "CLARIFIER");
+  assert.notStrictEqual((await ask("prix maison 650000 net vendeur")).parts[0].statut, "REPONSE_SANS");
+});
+
+test("the second model picks the lines shown, by id", async () => {
+  const faux = { parse: async () => null, arbitre: async (r, c) => ({ choix: c[0].id, aucun: false, conflit: false, raison: "test", roles: [] }), verifier: async (r, s, passage) => { const ids = passage.split("\n").map(x => x.split("\t")[0]); return { repond: true, lignes: [ids[ids.length - 1], "inventé:1"], raison: "test" }; }, lire: async () => null, relire: async () => null };
+  const Mm = window.Moteur.creer(index, { DICO: window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE, sim, modele: faux });
+  const r = await Mm.repondre("je gagne 60000 jai droit au regime impatrie", {});
+  assert.ok(r.parts[0].lignes.every(l => !l.id.startsWith("inventé")));
+});
+
+test("small routes: a lone 'plafond' asks, an employer's correction leaves the tree, '8 jours' is the condition, the site answers", async () => {
+  assert.strictEqual((await ask("plafond")).parts[0].statut, "CLARIFIER");
+  assert.notStrictEqual((await ask("mon employeur peut corriger ma classe")).parts[0].regle.id, "r10");
+  assert.strictEqual((await ask("8 jours pour tout le monde")).parts[0].lignes.length, 2);
+  for (const q of ["où est le simulateur", "mes questions partent où ?", "t'es une ia ?"]) assert.strictEqual((await ask(q)).parts[0].statut, "SITE", q);
 });
 
 test("a bare 'Oui.' is never the whole answer", async () => {

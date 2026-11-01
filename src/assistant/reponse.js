@@ -1,6 +1,6 @@
 // Brick 4, generation: one handler per route. Each returns a typed answer whose sentence is the guide's, fetched by its line id.
 (function () {
-  const { plain, stem, content, RE_TYPE, MOTS_DE_TYPE } = window.Texte;
+  const { plain, stem, content, RE_TYPE, MOTS_DE_TYPE, NATIONALITE } = window.Texte;
 
   window.Briques = window.Briques || {};
   window.Briques.reponse = function ({ index, opt, L, byId, pageById, inv, COEF, REFUS, DECLARE, sim, chercher, parVecteur, MIN_SCORE, MIN_MARGE, typeDe }) {
@@ -11,6 +11,9 @@
     const vue = l => ({ id: l.id, t: l.t, k: l.k, p: l.p, s: l.s, a: l.a, r: l.r, row: l.row });
     const autour = l => L.filter(x => x.g === l.g).map(vue);
     const trouve = (p, c) => L.find(l => l.p === p && l.t.includes(c));
+    // The check reads the lines by id and says which carry the answer. Those are the lines shown, so what was checked is what the reader sees.
+    const lignesDe = l => autour(l).map(y => `${y.id}\t${y.t}`).join("\n").slice(0, 1000);
+    const retenir = (c, v) => { if (!v) return; const ids = (v.lignes || []).filter(id => autour(c.l).some(y => y.id === id)); if (ids.length) c.lignesVerifiees = ids; };
 
     // D21: a flagged FAQ row never shows its opener.
     function ligneFAQ(l, faq) {
@@ -41,7 +44,7 @@
     function verifCondition(row, ctx) {
       for (const c of DECLARE.conditions || []) {
         const motOk = c.quand.some(w => row.pq.includes(plain(w)));
-        const conceptOk = row.concepts.some(x => x.id === c.concept) || /\b(commune|arrivee|declar\w+|enregistr\w+)\b/.test(row.pq);
+        const conceptOk = row.concepts.some(x => x.id === c.concept) || /\b(commune|arrivee|declar\w+|enregistr\w+|8 jours|huit jours)\b/.test(row.pq);
         if (!motOk || !conceptOk) continue;
         let v = null;
         if (/\b(francais\w*|belge|allemand\w*|portugais\w*|italien\w*|espagnol\w*|polonais\w*|neerlandais\w*|roumain\w*|suisse|citoyen de l'union|europeen\w*)\b/.test(row.pq)) v = "ue";
@@ -63,6 +66,7 @@
       prive: () => ({ statut: "PERSONNEL", texte: "Votre message contient ce qui ressemble à une donnée personnelle. Je ne l'ai ni répété ni envoyé. Reformulez sans ce numéro et je chercherai." }),
       salut: (row, ctx) => ({ statut: "SALUT", texte: /merci/.test(row.pq) ? "Avec plaisir." : `Bonjour. ${ctx.page ? `Vous lisez : ${ctx.page.titre}. ` : ""}Posez votre question, je réponds avec les phrases du guide.` }),
       refus: row => { const r = REFUS.find(x => x.re.test(row.pq)); return { statut: "REFUS", texte: r.texte, lien: r.route ? { route: r.route, label: r.label } : null, regle: r.id }; },
+      site_qa: row => { const r = (opt.SITE || window.SITE).find(x => x.re.test(row.pq)); return { statut: "SITE", texte: r.texte, lien: r.route ? { route: r.route, label: r.label } : null }; },
 
       // The reader points at the open page: it is the first scope, not a boost [6B:255-257, 6C:25-27].
       async page_qa(row, ctx, T) {
@@ -78,11 +82,26 @@
         const sur = ls => ({ statut: "REPONSE", lignes: ls.map(vue), sources: [source(ls[0])], portee: "page" });
         // "ce chiffre" names nothing the code can find: which one is the reader's to say.
         if (/\b(ce|cet|cette) (chiffre|montant|truc|mot|terme)\b/.test(row.pq) && row.mots.length <= 1) return demander();
-        // No word of its own: the type of the question picks the lines.
+        const lecteur = row.motsLecteur || row.mots;
+        // "c'est obligatoire ?": nothing says what "c'" is. No verdict: what the page says on that word, or a question back.
+        if (row.predicat && lecteur.length === 1 && !/\bcombien\b/.test(row.pq)) {
+          const SYN = { gratuit: ["gratuit", "payant"], payant: ["gratuit", "payant"], obligatoire: ["obligatoire", "exige", "impose"] };
+          const cherche = (SYN[lecteur[0]] || [lecteur[0]]).map(stem);
+          const dit = lignes.filter(l => cherche.some(x => l.st.has(x)));
+          const uniques = [...new Map(dit.map(l => [l.t, l])).values()].slice(0, 4);
+          return uniques.length ? { ...sur(uniques), titre: `Ce que cette page dit de « ${lecteur[0]} »`, note: ["Votre question ne dit pas de quoi il s'agit : voici ce que la page dit à ce sujet."] } : demander();
+        }
+        // A case the page does not speak of ("un permis marocain") is not answered from it.
+        const horsPage = lecteur.filter(m => !MOTS_DE_TYPE.has(stem(m)) && (NATIONALITE.test(m) || inv.has(stem(m))) && !lignes.some(l => l.st.has(stem(m))));
+        if (horsPage.length) { T.push({ qui: "code", etape: "Portée", detail: `pas sur cette page : ${horsPage.join(", ")}` }); row.epingle = false; return propre ? demander() : null; }
+        // No word of its own: the type of the question picks the lines, those the page puts forward first.
         const motsUtiles = [...st].filter(x => !MOTS_DE_TYPE.has(x));
-        if (!(row.motsLecteur || row.mots).map(stem).filter(x => !MOTS_DE_TYPE.has(x)).length || !motsUtiles.length) {
+        if (!lecteur.map(stem).filter(x => !MOTS_DE_TYPE.has(x)).length || !motsUtiles.length) {
           if (row.type === "montant" || row.type === "duree") {
-            const avec = lignes.filter(l => typeRe.test(l.plain)).sort((a, b) => (onglet && plain(b.s).includes(onglet) ? 1 : 0) - (onglet && plain(a.s).includes(onglet) ? 1 : 0) || (b.row ? 1 : 0) - (a.row ? 1 : 0));
+            const argent = /\b(coute|coutent|cout|prix|tarif|frais|payer|paye)\b/.test(row.pq) || row.type === "duree";
+            const NOMBRE = /\d|\b[a-z-]*(deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze|quinze|vingt|trente|quarante|cinquante|soixante)[a-z-]*\s+\w+/;
+            const rang = l => (["chapo", "retenir", "repere"].includes(l.k) ? 0 : 1);
+            const avec = lignes.filter(l => (argent ? typeRe : NOMBRE).test(l.plain)).sort((a, b) => (onglet && plain(b.s).includes(onglet) ? 1 : 0) - (onglet && plain(a.s).includes(onglet) ? 1 : 0) || rang(a) - rang(b) || (b.row ? 1 : 0) - (a.row ? 1 : 0));
             const uniques = [...new Map(avec.map(l => [l.t, l])).values()].slice(0, 5);
             return uniques.length ? { ...sur(uniques), titre: `Sur cette page : ${titre}` } : demander();
           }
@@ -111,9 +130,10 @@
           const pick = arbitre.choix && top.find(x => x.l.id === arbitre.choix);
           if (!pick) { T.push({ qui: "code", etape: "Arbitre écouté", detail: "aucun passage de cette page ne répond" }); return finSansLigne(); }
           c = pick;
-          const v = modele.verifier ? await modele.verifier(rq, titre + " › " + c.l.s, autour(c.l).map(y => y.t).join(" ").slice(0, 700)) : null;
+          const v = modele.verifier ? await modele.verifier(rq, titre + " › " + c.l.s, lignesDe(c.l)) : null;
           if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
           if (v && !v.repond) return finSansLigne();
+          retenir(c, v);
         } else T.push({ qui: "modèle", etape: "Arbitre", detail: "pas de réponse dans le temps : meilleure ligne du code, signalée" });
         return composer(c, row, ctx, T, { clair: false, arbitre, audit: null, st: motsUtiles });
       },
@@ -147,13 +167,18 @@
 
       outil_guide(row) {
         const c = row.concepts.find(x => x.c.tool);
-        return { statut: "OUTIL", texte: `Cette réponse se trouve dans un outil du guide, que je ne lis pas encore : ${c.c.titre}.`, lien: { route: c.c.tool, label: `Ouvrir : ${c.c.titre}` } };
+        const texte = c.id === "communes" ? "Ce chiffre n'est pas dans la table des communes que je lis. L'outil du guide montre aussi les écoles, les quartiers et les communes frontalières." : `Cette réponse se trouve dans un outil du guide, que je ne lis pas encore : ${c.c.titre}.`;
+        return { statut: "OUTIL", texte, lien: { route: c.c.tool, label: `Ouvrir : ${c.c.titre}` } };
       },
 
       // D41: typed slots, an echo, no defaults.
       outil_qa(row) {
         if (!sim) return { statut: "OUTIL", texte: "Le simulateur du guide calcule ce net.", lien: { route: "#simulateur/salaire", label: "Ouvrir le simulateur" } };
-        const sansClasse = row.pq.replace(/classe\s*(1a|1|2)/g, " ");
+        const sansClasse = row.pq.replace(/classe\s*(1a|1|2)/g, " ").replace(/\b(en|pour|depuis|annee)\s+(19|20)\d{2}\b/g, " ");
+        const lien = { route: "#simulateur/salaire", label: "Ouvrir le simulateur" };
+        // Stops, not guesses: two salaries are not two calculations, and a salary paid elsewhere is not this simulator's.
+        if ([...sansClasse.matchAll(/\b(\d{1,3}(?:[ .]\d{3})+|\d{4,7})\b/g)].length >= 2) return { statut: "REPONSE_SANS", texte: "Je calcule un salaire à la fois. Deux salaires se recalculent ensemble à la déclaration commune : ce n'est pas la somme de deux calculs.", lien };
+        if (/\b(en france|en belgique|en allemagne|au portugal|en suisse|a paris|a bruxelles|a metz|a thionville|a treves)\b/.test(sansClasse) && !/\b(luxembourg|frontalier\w*)\b/.test(sansClasse)) return { statut: "REPONSE_SANS", texte: "Ce simulateur calcule un salaire versé au Luxembourg. Je ne le fais pas pour un salaire versé ailleurs.", lien };
         const m = sansClasse.match(/(\d{1,3}(?:[ .]\d{3})+|\d{4,7}|\d+(?:[.,]\d+)?\s*k\b)/);
         // A net figure stops the calculation: the simulator goes from gross to net, and a guess here is a wrong number [8A].
         const net = /\b\d[\d .]*k?\s*(€|euros?)?\s*nets?\b|\bnet\s*(de|a|:)?\s*\d/.test(sansClasse);
@@ -181,7 +206,10 @@
         const montreNet = row.negation ? row.negation.veut === "net" : true;
         return { statut: "CALCUL", calc: { fonction: "SIM.comparatif", entrees: { brut_annuel: brut, mois, classes: classes.length ? classes : "toutes", impatrie }, lignes },
           echo: `${brut.toLocaleString("fr-FR")} € brut par an${mensuel ? ` (${v.toLocaleString("fr-FR")} € × ${mois})` : ""}, sur ${mois} mois${classes.length ? ", " + classes.map(c => c.replace("classe", "classe ")).join(" et ") : ", les trois classes"}${impatrie ? ", régime des impatriés" : ""}`,
-          note: [impatrie ? "Calculé sans vérifier que vous remplissez les conditions du régime." : null, opt.paramsModifies ? "Vous avez modifié les paramètres du simulateur : ce calcul les utilise." : null, "Indicatif : retenue sur le seul salaire, pas le chiffre de votre fiche de paie.", montreNet ? null : null].filter(Boolean),
+          note: [impatrie ? "Calculé sans vérifier que vous remplissez les conditions du régime." : null,
+            /\b(mi[- ]temps|temps partiel|\d+ ?%)\b/.test(sansClasse) ? "Calculé comme un temps plein : le crédit d'impôt pour bas salaires se calcule sur le brut d'un temps plein, donc le résultat à temps partiel peut différer." : null,
+            /\benfants?\b/.test(sansClasse) ? "Je n'ai pas tenu compte de vos enfants : ce calcul ne prend que le brut et la classe." : null,
+            opt.paramsModifies ? "Vous avez modifié les paramètres du simulateur : ce calcul les utilise." : null, "Indicatif : retenue sur le seul salaire, pas le chiffre de votre fiche de paie.", montreNet ? null : null].filter(Boolean),
           lien: { route: "#simulateur/salaire", label: "Ouvrir le simulateur" } };
       },
 
@@ -268,8 +296,11 @@
         if (!table) return null;
         const q = row.pq.replace(/-/g, " ");
         const mot = m => new RegExp("(^|[^a-z0-9])" + m + "($|[^a-z0-9])").test(q);
-        const ville = /\b(luxembourg ville|lux ville|ville de luxembourg)\b/.test(q);
-        const nommees = table.lignes.filter(c => { const n = plain(c.nom).replace(/-/g, " "); return n === "luxembourg" ? ville : mot(n); });
+        const ville = /\b(luxembourg ville|lux ville|ville de luxembourg|(a|de|pour) luxembourg)\b/.test(q);
+        // "Esch" alone is almost always Esch-sur-Alzette: answered, and the card says so.
+        const eschSeul = /\besch\b/.test(q) && !/\besch sur\b/.test(q);
+        const nommees = table.lignes.filter(c => { const n = plain(c.nom).replace(/-/g, " "); return n === "luxembourg" ? ville : (n === "esch sur alzette" && eschSeul) || mot(n); });
+        const compris = [eschSeul && nommees.some(c => c.nom === "Esch-sur-Alzette") ? "J'ai compris Esch-sur-Alzette, pas Esch-sur-Sûre." : null, ville ? "J'ai compris la commune de Luxembourg, pas le pays." : null].filter(Boolean);
         let id = null, long = 0;
         for (const [k, ms] of Object.entries(MI)) for (const m of ms) { const p = plain(m); if (p.length > long && mot(p)) { id = k; long = p.length; } }
         const classe = /\b(moins cher\w*|plus cher\w*|le plus|la plus|les plus|le moins|la moins|les moins|classement|top \d+)\b/.test(q);
@@ -278,7 +309,31 @@
         const fmt = (v, i) => `${i.fmt === "dec" ? String(v).replace(".", ",") : Number(v).toLocaleString("fr-FR")} ${i.unite}`;
         const lien = { route: "#cartes", label: "Ouvrir les cartes" };
         const sources = i => [{ page: "Cartes et communes", section: i ? i.source : "" }];
-        const avertissement = i => (i.aide ? [i.aide.split(/(?<=[.!?])\s/)[0]] : []);
+        const avertissement = i => [...compris, ...(i.aide ? [i.aide.split(/(?<=[.!?])\s/)[0]] : [])];
+        const annee = q.match(/\b(1[89]\d{2}|20\d{2})\b/)?.[1];
+        const virgule = v => String(v).replace(".", ",");
+        // The Gini exists for the country only, so a commune gets that, said plainly, and never a neighbouring figure.
+        if (/\bgini\b/.test(q) && table.national?.gini) {
+          const n = table.national;
+          const i = annee ? n.annees.indexOf(+annee) : n.annees.length - 1;
+          const debut = nommees.length ? `Le guide ne donne pas le Gini par commune. ` : "";
+          if (i < 0) return { statut: "NE_CHIFFRE_PAS", texte: `${debut}Pour le pays, sa série va de ${n.annees[0]} à ${n.annees[n.annees.length - 1]}, pas ${annee}.`, sources: sources(null), lien };
+          return { statut: nommees.length ? "NE_CHIFFRE_PAS" : "REPONSE", texte: `${debut}Le coefficient de Gini du pays : ${virgule(n.gini[i])} en ${n.annees[i]}.`, sources: sources(null), requete: `national : gini, année ${n.annees[i]}`, lien };
+        }
+        // House rents are not in this table: the apartment figure is not an answer to that.
+        if (nommees.length && id?.startsWith("loyer") && /\b(maison|villa)\b/.test(q)) {
+          const c = nommees[0];
+          return { statut: "NE_CHIFFRE_PAS", texte: `Cette table donne le loyer d'un appartement, pas d'une maison.${c.i[id] != null ? ` Pour un appartement à ${c.nom} : ${fmt(c.i[id], ind)}.` : ""}`, sources: sources(ind), requete: `communes où nom = ${c.nom} : ${id}`, lien };
+        }
+        // A year asks for the series, never for the latest figure.
+        if (nommees.length && ind && annee) {
+          const serie = table.series?.[id];
+          if (!serie) return { statut: "NE_CHIFFRE_PAS", texte: `Je n'ai « ${ind.nom} » que pour sa dernière année, pas pour ${annee}.`, sources: sources(ind), lien };
+          const i = serie.annees.indexOf(+annee);
+          const val = c => (i < 0 ? null : c.s?.[id]?.[i]);
+          if (nommees.every(c => val(c) == null)) return { statut: "NE_CHIFFRE_PAS", texte: `Le guide n'a pas ce chiffre pour ${annee}. Sa série va de ${serie.annees[0]} à ${serie.annees[serie.annees.length - 1]}, avec des années manquantes.`, sources: sources(ind), requete: `séries : ${id}, année ${annee}`, lien };
+          return { statut: "REPONSE", titre: `${ind.nom}, ${annee}`, lignesLibres: nommees.map(c => `${c.nom} : ${val(c) == null ? "pas de chiffre" : fmt(val(c), ind)}`), sources: sources(ind), requete: `séries où nom = ${nommees.map(c => c.nom).join(", ")} : ${id}, année ${annee}`, note: compris, lien };
+        }
         if (nommees.length && ind) {
           const vides = nommees.filter(c => c.i[id] == null);
           if (vides.length === nommees.length) return { statut: "NE_CHIFFRE_PAS", texte: `Le guide n'a pas de chiffre « ${ind.nom} » pour ${vides.map(c => c.nom).join(" et ")}.`, sources: sources(ind), requete: `communes où nom = ${vides.map(c => c.nom).join(", ")} : ${id}`, lien };
@@ -293,6 +348,16 @@
           return { statut: "LISTE", titre: `${ind.nom} : ${asc ? "les plus bas" : "les plus hauts"}`, liste: tri.map(c => ({ t: `${c.nom} : ${fmt(c.i[id], ind)}` })), sources: sources(ind),
             complet: { n: tri.length, source: "la table des communes", total: avec.length }, requete: `communes triées par ${id}, ordre ${asc ? "croissant" : "décroissant"}, ${tri.length} premières sur ${avec.length} avec un chiffre`,
             note: [...avertissement(ind), sans ? `${sans} communes sans chiffre : non classées, ce qui ne veut pas dire zéro.` : null].filter(Boolean), lien };
+        }
+        // A threshold is a slice of the column, counted and sorted by code.
+        const seuil = q.match(/\b(sous|moins de|inferieure? a|en dessous de|au dessous de|plus de|au dessus de|superieure? a)\s+(\d[\d ]*)/);
+        if (!nommees.length && ind && seuil) {
+          const n = parseInt(seuil[2].replace(/\s/g, ""), 10);
+          const haut = /\b(plus|dessus|superieure?)\b/.test(seuil[1]);
+          const avec = table.lignes.filter(c => c.i[id] != null);
+          const garde = avec.filter(c => (haut ? c.i[id] > n : c.i[id] < n)).sort((a, b) => a.i[id] - b.i[id]);
+          return { statut: "LISTE", titre: `${ind.nom} : ${haut ? "au-dessus de" : "en dessous de"} ${n.toLocaleString("fr-FR")}`, liste: garde.slice(0, 14).map(c => ({ t: `${c.nom} : ${fmt(c.i[id], ind)}` })), sources: sources(ind),
+            complet: { n: garde.length, source: "la table des communes", total: avec.length, tronque: garde.length > 14 }, requete: `communes où ${id} ${haut ? ">" : "<"} ${n}`, note: [...avertissement(ind), `${table.lignes.length - avec.length} communes sans chiffre : non comptées, ce qui ne veut pas dire zéro.`], lien };
         }
         const nomsMots = new Set(nommees.flatMap(c => content(c.nom)));
         if (nommees.length === 1 && row.mots.every(m => nomsMots.has(m))) {
@@ -399,6 +464,8 @@
         const parPage = () => {
           const id = c.l.p;
           if (row.type !== "procedure" || !id || !(id === f.pagePlan || row.concepts.some(x => (x.c.pages || []).includes(id)))) return null;
+          // A summary does not answer a case the page never mentions.
+          if ((row.motsLecteur || row.mots).some(m => NATIONALITE.test(m) && !L.some(l => l.p === id && l.st.has(stem(m))))) return null;
           const ls = L.filter(l => l.p === id && (l.k === "chapo" || l.k === "retenir")).slice(0, 4);
           if (!ls.length) return null;
           const p = pageById.get(id);
@@ -406,14 +473,15 @@
           return { statut: "REPONSE", titre: `${p.titre} : ce que le guide retient`, lignes: ls.map(vue), sources: [source(ls[0])], ailleurs: ctx.page && id !== ctx.page.id ? p.titre : null, lien: { route: p.route, label: `Ouvrir : ${p.titre}` } };
         };
         // The second model says this passage does not answer. A how-to opens the page; a number that is not there is the guide's rule without its figure; anything else is "not found", with the passage as the nearest.
-        const siRefuse = () => {
-          const fiche = parPage();
-          if (fiche) return fiche;
+        const chiffreAbsent = () => {
           const re = RE_TYPE[row.type];
-          if ((row.type === "montant" || row.type === "duree") && !re.test(c.l.row ? c.l.plain : autour(c.l).map(y => plain(y.t)).join(" "))) {
-            T.push({ qui: "code", etape: "Sans chiffre", detail: "le passage choisi parle du sujet et ne donne pas ce chiffre" });
-            return composer(c, row, ctx, T, { clair: false, audit: f.audit, st: f.stems });
-          }
+          if (!(row.type === "montant" || row.type === "duree") || re.test(c.l.row ? c.l.plain : autour(c.l).map(y => plain(y.t)).join(" "))) return null;
+          T.push({ qui: "code", etape: "Sans chiffre", detail: "le passage choisi parle du sujet et ne donne pas ce chiffre" });
+          return composer(c, row, ctx, T, { clair: false, audit: f.audit, st: f.stems });
+        };
+        const siRefuse = () => {
+          const direct = parPage() || chiffreAbsent();
+          if (direct) return direct;
           row.proche = c.l;
           return null;
         };
@@ -430,14 +498,26 @@
           return { statut: "CLARIFIER", texte: "Je peux comprendre deux choses. Laquelle ?", champ: "lieu",
             options: [{ label: pageById.get(c.l.p)?.titre || c.l.p, envoie: `${row.original} (${pageById.get(c.l.p)?.titre})` }, { label: "Section épargne : " + autre.l.s, envoie: autre.l.s }] };
         }
-        if ((c.vide || !clair || !assezFort(c)) && modele && !c.l.nomodel) {
+        // The margin is mine, not a proof. A clear winner gets the second model's fresh read before it is called an answer; if refused, the other candidates get their chance.
+        let refuse = null;
+        if (clair && assezFort(c) && modele && modele.verifier && opt.verifierTout !== false && !c.l.nomodel) {
+          const v = await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, lignesDe(c.l));
+          if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
+          if (v && !v.repond) {
+            const direct = parPage() || chiffreAbsent();
+            if (direct) return direct;
+            refuse = c;
+            row.proche = c.l;
+          } else retenir(c, v);
+        }
+        if ((c.vide || !clair || !assezFort(c) || refuse) && modele && !c.l.nomodel) {
           row.appels = (row.appels || 0) + 1;
           const glossaire = row.concepts.slice(0, 2).map(x => pageById.get((x.c.pages || [])[0])?.resume).filter(Boolean).join(" ");
-          let cands = f.top.filter(x => !x.l.nomodel).slice(0, 5);
+          let cands = f.top.filter(x => !x.l.nomodel && !(refuse && x.l.g === refuse.l.g)).slice(0, 5);
           if (opt.vecteurs && modele.embed) {
             const v = await modele.embed(row.corrigee || row.original);
             if (v) {
-              const proches = parVecteur(v, 14).filter(i => !L[i].nomodel && COEF[L[i].k] !== 0 && !cands.some(x => x.l.g === L[i].g));
+              const proches = parVecteur(v, 14).filter(i => !L[i].nomodel && COEF[L[i].k] !== 0 && !cands.some(x => x.l.g === L[i].g) && !(refuse && L[i].g === refuse.l.g));
               const vus2 = new Set();
               for (const i of proches) { if (vus2.has(L[i].g) || cands.length >= 10) continue; vus2.add(L[i].g); cands.push(f.top.find(x => x.l.id === L[i].id) || { s: 0, l: L[i], sc: { mots: new Set(), dico: 0, vecteur: 1 }, couverture: 0 }); }
               T.push({ qui: "modèle", etape: "Vecteurs", detail: `${vus2.size} passages proches ajoutés au dossier` });
@@ -458,20 +538,16 @@
             if (pick) {
               c = pick;
               // The arbiter ranked. A second model, which did not see the ranking, says whether this passage answers.
-              const v = modele.verifier ? await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, autour(c.l).map(y => y.t).join(" ").slice(0, 700)) : null;
+              const v = modele.verifier ? await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, lignesDe(c.l)) : null;
               if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
               if (v && !v.repond) return siRefuse();
+              retenir(c, v);
             } else { T.push({ qui: "code", etape: "Arbitre écouté", detail: "aucun candidat ne répond" }); return null; }
           } else T.push({ qui: "modèle", etape: "Arbitre", detail: "pas de réponse dans le temps : meilleure ligne du code, signalée" });
         } else {
-          T.push({ qui: clair ? "modèle" : "code", etape: clair ? "Modèle non appelé" : "Sans arbitre", detail: clair ? "marge claire" : "marge plate, pas de modèle disponible : meilleure ligne, non arbitrée" });
-          // The margin is mine, not a proof. A clear winner still gets the second model's fresh read before it is called an answer.
-          if (clair && modele && modele.verifier && opt.verifierTout !== false && !c.l.nomodel) {
-            const v = await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, autour(c.l).map(y => y.t).join(" ").slice(0, 700));
-            if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
-            if (v && !v.repond) return siRefuse();
-          }
+          T.push({ qui: clair && !modele ? "modèle" : "code", etape: clair ? (modele ? "Pas d'arbitre" : "Modèle non appelé") : "Sans arbitre", detail: clair ? "marge claire" : "marge plate, pas de modèle disponible : meilleure ligne, non arbitrée" });
         }
+        if (refuse && !arbitre?.choix) return null;
         if (!assezFort(c) && !arbitre?.choix) { T.push({ qui: "code", etape: "Refus", detail: `meilleure ligne trop faible (couverture ${c.couverture.toFixed(2)})` }); return null; }
         return composer(c, row, ctx, T, { clair, arbitre, audit: f.audit, st: f.stems });
       },
@@ -506,9 +582,10 @@
       // A FAQ line can be a bare "Oui.": it is shown with what follows it, and a flagged opener never alone (D21).
       const fq = c.l.k === "faq" && index.faq.find(x => x.lignes.includes(c.l.id));
       if (fq) lignes = fq.opener_faux ? ligneFAQ(c.l, fq).lignes : fq.lignes.slice(0, 3).map(i => vue(byId.get(i)));
+      if (c.lignesVerifiees && !fq?.opener_faux) lignes = c.lignesVerifiees.slice(0, 4).map(id => vue(byId.get(id)));
       const typeRe = RE_TYPE[row.type];
       let manque = null;
-      if (typeRe && !typeRe.test(c.l.plain)) {
+      if (typeRe && !typeRe.test(lignes.map(x => plain(x.t)).join(" "))) {
         // D27: a number was asked. Is it on another line of this place, or of this page on the same words?
         const voisine = c.l.row ? null : L.filter(x => x.g === c.l.g && typeRe.test(x.plain))[0] || (c.l.p === "faq" ? null : L.filter(x => x.p === c.l.p && COEF[x.k] !== 0 && typeRe.test(x.plain) && (st || []).filter(s => !MOTS_DE_TYPE.has(s) && x.st.has(s)).length >= 2)[0]);
         if (voisine) lignes.unshift(vue(voisine));

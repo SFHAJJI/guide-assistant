@@ -44,10 +44,29 @@ window.DICO = [
   { id: "achat", pages: ["achat", "interets"], mots: ["acheter", "achat", "notaire", "emprunt", "pret immobilier", "credit immobilier", "mortgage", "buy a house"] },
   { id: "dechets", pages: ["dechets"], mots: ["dechets", "poubelle", "recyclage", "valorlux", "trash", "garbage"] },
   { id: "donnees", pages: ["panel_admin"], mots: ["mes donnees", "donnees personnelles", "confidentialite", "cookies", "stocke", "enregistre mes", "envoye", "envoyees", "qui voit", "privacy", "rgpd", "mesure d'audience", "effacer mes"] },
-  { id: "communes", tool: "#cartes", titre: "Cartes et communes", mots: ["__COMMUNES__", "quelle commune", "communes", "commune la moins chere", "commune la plus", "commune la moins", "la commune avec", "commune avec le", "commune ou", "quartier", "ecoles autour", "loyer par commune", "prix au m2", "prix du m2"] },
+  { id: "plafond", seul: true, pages: [], mots: ["plafond", "plafonds"],
+    sens: [
+      { id: "caution", label: "La caution d'un bail", mots: ["caution", "garantie", "loyer", "bail"], ajoute: "garantie locative" },
+      { id: "abordable", label: "Le logement abordable", mots: ["abordable", "logement", "revenu"], ajoute: "logement abordable" },
+      { id: "epargne", label: "La déduction du 111bis", mots: ["111bis", "prevoyance", "epargne"], ajoute: "111bis" },
+      { id: "teletravail", label: "Le télétravail frontalier", mots: ["teletravail", "frontalier"], ajoute: "télétravail frontalier" },
+    ] },
+  { id: "communes", tool: "#cartes", titre: "Cartes et communes", mots: ["__COMMUNES__", "quelle commune", "communes", "commune la moins chere", "commune la plus", "commune la moins", "la commune avec", "commune avec le", "commune ou", "esch", "a luxembourg", "luxembourg ville", "lux ville", "ville de luxembourg", "gini", "quartier", "ecoles autour", "loyer par commune", "prix au m2", "prix du m2"] },
   { id: "lignes", tool: "#lignes", titre: "Lignes de transport", mots: ["quelle ligne", "horaire", "arret de bus", "temps de trajet"] },
   { id: "jeux", tool: "#jeux", titre: "Aires de jeux", mots: ["aire de jeux", "aires de jeux", "plaine de jeux"] },
   { id: "emprunt_outil", tool: "#simulateur/emprunt", titre: "Simulateur d'emprunt", mots: ["capacite d'emprunt", "combien puis-je emprunter", "mensualite", "mensualites", "how much can i borrow"] },
+];
+
+// Questions about the assistant or the site. Fixed answers: nothing here is searched, and nothing reaches a model.
+window.SITE = [
+  { id: "identite", re: /\b(t'es|tu es|es tu|es-tu|etes vous|etes-vous|are you)\b.*\b(ia|bot|robot|humain|chatgpt|ai|une vraie personne)\b|\bqui es[- ]tu\b/,
+    texte: "Je suis un assistant automatique, pas une personne. Un modèle m'aide à comprendre les questions, et je réponds avec les phrases du guide." },
+  { id: "confidentialite", re: /\b(mes questions|mes messages|ma question)\b.*\b(partent|part|vont|va|envoy\w*|stock\w*|enregistr\w*|garde\w*|voit)\b|\bou (partent|vont) mes\b/,
+    texte: "Tout est enregistré dans ce navigateur. Seules les questions posées à l'assistant en sortent, sans être enregistrées, quand le modèle est activé. Un numéro, un téléphone ou une adresse reconnus ne partent pas." },
+  { id: "simulateur", re: /\b(ou est|ou se trouve|ou trouver|ou je trouve|comment ouvrir|ouvrir)\b.*\bsimulateur\b/, texte: "Le voici.", route: "#simulateur/salaire", label: "Ouvrir le simulateur" },
+  { id: "comparateur", re: /\b(ou est|ou se trouve|ou trouver|ou je trouve|comment ouvrir|ouvrir)\b.*\bcomparateur\b/, texte: "Le voici.", route: "#comparateur", label: "Ouvrir le comparateur" },
+  { id: "parcours", re: /\b(ou est|ou se trouve|ou trouver|ou je trouve|comment ouvrir|ouvrir)\b.*\bparcours\b/, texte: "Le voici.", route: "#parcours", label: "Ouvrir le parcours" },
+  { id: "cartes", re: /\b(ou est|ou se trouve|ou trouver|ou je trouve|comment ouvrir|ouvrir)\b.*\b(la carte|les cartes)\b/, texte: "Les voici.", route: "#cartes", label: "Ouvrir les cartes" },
 ];
 
 // Which column of the commune table a question asks for. The longest match wins. Mine, like the rows above.

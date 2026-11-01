@@ -18,7 +18,7 @@ export function texteDe(res) {
 }
 
 const AFFIRME = new Set(["REPONSE", "CALCUL", "LISTE", "VERDICTS", "DEUX_CHOSES"]);
-const REFUSE = new Set(["RIEN", "HORS", "REFUS", "NE_CHIFFRE_PAS", "REPONSE_SANS", "URGENCE", "SALUT"]);
+const REFUSE = new Set(["RIEN", "HORS", "REFUS", "NE_CHIFFRE_PAS", "REPONSE_SANS", "URGENCE", "SALUT", "SITE"]);
 
 // outcome: juste | faux | prudent | coupe
 export function noter(q, res) {

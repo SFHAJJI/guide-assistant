@@ -221,7 +221,7 @@ try {
     .map(n => n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
     .flatMap(n => (n.includes("-") ? [n, n.replace(/-/g, " ")] : [n]));
   // The table itself: names, cantons and the 48 figures. Maps and yearly series stay out of the index.
-  tableCommunes = { construit: data.meta?.construit || null, indicateurs: (data.indicateurs || []).map(({ id, nom, unite, fmt, source, aide }) => ({ id, nom, unite, fmt, source, aide })), lignes: liste.map(x => ({ nom: x.nom, canton: x.canton, i: x.i })) };
+  tableCommunes = { construit: data.meta?.construit || null, indicateurs: (data.indicateurs || []).map(({ id, nom, unite, fmt, source, aide }) => ({ id, nom, unite, fmt, source, aide })), series: Object.fromEntries(Object.entries(data.series || {}).map(([k, v]) => [k, { annees: v.annees }])), national: data.national || null, lignes: liste.map(x => ({ nom: x.nom, canton: x.canton, i: x.i, s: x.s })) };
 } catch (e) { console.error("communes:", e.message); }
 stats.communes = communes.length;
 const index = { communes, tableCommunes, stats, pages, plan, lignes, rangees, faq, verdicts, parcours, cartes, entrees, renvois, addrs, arbre, statuts: UI.STATUTS_FR, outils: UI.OUTILS_OFFICIELS };
