@@ -32,9 +32,7 @@ for (const f of htmlFiles(G)) {
 // D37: the whole patch to his interface. Each replacement must find its target or the build stops.
 function remplacer(file, avant, apres) {
   const p = join(G, file);
-  const s = readFileSync(p, "utf8").replace(/
-/g, "
-");
+  const s = readFileSync(p, "utf8").split(String.fromCharCode(13)).join("");
   if (!s.includes(avant)) throw new Error(`patch: not found in ${file}: ${avant.slice(0, 60)}`);
   writeFileSync(p, s.replace(avant, apres));
 }
