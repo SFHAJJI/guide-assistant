@@ -333,8 +333,9 @@
     ci.addEventListener("change", () => { localStorage.setItem("assistant.trace", ci.checked ? "1" : "0"); document.querySelectorAll("#widget-log details.trace").forEach(d => { d.open = ci.checked; }); });
     tr.append(ci, " Comment j'ai trouvé");
     const dl = el("button", "lien", "Mes questions (CSV)"); dl.addEventListener("click", exporterSession);
+    const ess = el("a", "lien", "Neuf exemples"); ess.href = "../essais/";
     const mach = el("a", "lien", "La mécanique"); mach.href = "../machine/";
-    outils.append(tr, dl, mach);
+    outils.append(tr, dl, ess, mach);
     log.parentNode.insertBefore(outils, log);
     window.addEventListener("hashchange", () => setTimeout(majEntete, 120));
     document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#g-tabs, .g-tab, #mrh-tabs, #sim-tabs, #widget-btn")) setTimeout(majEntete, 80); });

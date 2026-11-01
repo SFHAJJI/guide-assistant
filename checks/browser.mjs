@@ -94,7 +94,12 @@ for (const [nom, qs, attendu] of [["bougie", "?q=Un%20assur%C3%A9%20laisse%20une
 }
 const porte = await ctx.newPage();
 porte.on("pageerror", e => fails.push("door pageerror: " + e.message));
-await porte.goto(`${BASE}/`, { waitUntil: "load" });
+const racine = await ctx.newPage();
+await racine.goto(`${BASE}/`, { waitUntil: "load" });
+await racine.waitForURL(/\/guide\//, { timeout: 8000 }).catch(() => {});
+check("the site opens on the guide", racine.url().includes("/guide/"), racine.url());
+await racine.close();
+await porte.goto(`${BASE}/essais/`, { waitUntil: "load" });
 await porte.waitForTimeout(300);
 check("entry page has nine buttons", (await porte.locator("a.essai").count()) === 9);
 await porte.screenshot({ path: "shots/porte.png" });

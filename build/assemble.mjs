@@ -76,8 +76,9 @@ if (existsSync("src/assistant/assistant.js")) {
   cpSync("src/assistant", join(G, "assistant"), { recursive: true });
 }
 
-for (const [from, to] of [["src/door", DIST], ["src/machine", join(DIST, "machine")]]) {
+for (const [from, to] of [["src/essais", join(DIST, "essais")], ["src/machine", join(DIST, "machine")]]) {
   if (existsSync(from)) cpSync(from, to, { recursive: true });
 }
+writeFileSync(join(DIST, "index.html"), '<!doctype html>\n<html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url=guide/"><title>Guide</title></head><body><a href="guide/">Ouvrir le guide</a></body></html>\n');
 writeFileSync(join(DIST, ".nojekyll"), "");
 console.log("assembled", COMMIT);

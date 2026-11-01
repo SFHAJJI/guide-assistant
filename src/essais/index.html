@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neuf questions à essayer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 16px/1.5 system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 24px; line-height: 1.25; margin: 0 0 12px; }
+  p { margin: 0 0 8px; }
+  ul { list-style: none; padding: 0; margin: 20px 0; display: grid; gap: 8px; }
+  a.essai { display: grid; grid-template-columns: 148px 1fr; gap: 10px; padding: 10px 12px; border: 1px solid rgba(128,128,128,.4); border-radius: 8px; text-decoration: none; color: inherit; }
+  a.essai:hover { border-color: #0b6b3a; }
+  a.essai b { font-size: 13px; color: #0b6b3a; }
+  a.essai span { font-size: 14px; }
+  .pied { font-size: 14px; opacity: .85; }
+  @media (max-width: 520px) { a.essai { grid-template-columns: 1fr; gap: 2px; } }
+  @media (prefers-color-scheme: dark) { a.essai b { color: #6fd39c; } }
+</style>
+</head>
+<body>
+<h1>Neuf questions à essayer</h1>
+<p>Il lit la page que vous avez sous les yeux. Il répond avec la phrase du guide.</p>
+<p>Il ouvre la bonne page et surligne le passage. Sous chaque réponse : comment il a trouvé, étape par étape.</p>
+<p><b>Le modèle comprend la question. Le guide donne la réponse. Le code calcule et décide.</b></p>
+<p class="pied" style="margin-top:16px">Essayez, la question est déjà écrite :</p>
+<ul>
+  <li><a class="essai" href="../guide/?q=combien%20coutent%20les%20plaques%20%3F&p=fiche/vehicule&c=g-tab-couts"><b>Sur la page</b><span>Fiche véhicule, onglet coûts : « combien coûtent les plaques ? »</span></a></li>
+  <li><a class="essai" href="../guide/?q=quel%20d%C3%A9lai%20pour%20d%C3%A9clarer%20mon%20arriv%C3%A9e%20%3F&p=fiche/vehicule"><b>Ailleurs</b><span>Depuis la fiche véhicule : « quel délai pour déclarer mon arrivée ? »</span></a></li>
+  <li><a class="essai" href="../guide/?q=combien%20de%20caution%20et%20c%27est%20quoi%20le%20matricule%20%3F"><b>Deux questions</b><span>« combien de caution et c'est quoi le matricule ? »</span></a></li>
+  <li><a class="essai" href="../guide/?q=65000%20brut%20en%20classe%201%20et%20en%20classe%202"><b>Calcul</b><span>« 65000 brut en classe 1 et en classe 2 »</span></a></li>
+  <li><a class="essai" href="../guide/?q=Je%20me%20fais%20voler%20mon%20v%C3%A9lo%20dans%20le%20local%20commun%20de%20l%27immeuble%2C%20qui%20n%27%C3%A9tait%20pas%20ferm%C3%A9%20%C3%A0%20cl%C3%A9.%20Suis-je%20couvert%20%3F"><b>Un sinistre</b><span>« Je me fais voler mon vélo dans le local commun… Suis-je couvert ? »</span></a></li>
+  <li><a class="essai" href="../guide/?q=Un%20assur%C3%A9%20laisse%20une%20bougie%20sur%20la%20table%20de%20son%20jardin%20pendant%20ses%20vacances.%20Avec%20la%20chaleur%2C%20la%20bougie%20fond%20et%20ab%C3%AEme%20la%20table.%20Est-ce%20couvert%20%3F"><b>Rien dans le guide</b><span>« Un assuré laisse une bougie sur la table de son jardin… »</span></a></li>
+  <li><a class="essai" href="../guide/?q=puis-je%20sortir%20d%27un%20contrat%20111bis%20avant%2060%20ans%20%3F"><b>Le guide dit deux choses</b><span>« puis-je sortir d'un contrat 111bis avant 60 ans ? »</span></a></li>
+  <li><a class="essai" href="../guide/?q=responsabilit%C3%A9%20civile%2C%20%C3%A7a%20couvre%20quoi%20%3F"><b>Plusieurs sens</b><span>« responsabilité civile, ça couvre quoi ? »</span></a></li>
+  <li><a class="essai" href="../guide/?sans=1&q=combien%20de%20caution%20et%20c%27est%20quoi%20le%20matricule%20%3F"><b>Sans modèle</b><span>La même chose, modèle coupé</span></a></li>
+</ul>
+<p class="pied"><a href="../guide/">Ouvrir le guide</a> · <a href="../machine/">La mécanique</a> : le parsing, l'aiguillage, les mesures par type de question, les limites.</p>
+<p class="pied">Copie de démonstration du guide public lux-guide.github.io. Son contenu appartient à son auteur. Seul l'assistant est ajouté.</p>
+</body>
+</html>
