@@ -3,7 +3,7 @@
 import { chromium } from "playwright";
 
 const BASE = process.argv[2] || "https://sfhajji.github.io/guide-assistant";
-const QUESTIONS = ["comment ouvrir un compte en banque ?", "quelle assurance habitation choisir ?", "c'est quoi le matricule ?"];
+const QUESTIONS = ["comment ouvrir un compte en banque ?", "combien de jours de teletravail pour un frontalier belge", "c'est quoi le matricule ?"];
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
 let total = 0, vecteurs = 0;
