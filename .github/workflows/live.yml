@@ -1,0 +1,22 @@
+name: live
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [site]
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Browser
+        run: |
+          npm i --no-save playwright@1.48
+          npx playwright install --with-deps chromium
+      - name: The published site reaches the model
+        run: node checks/live.mjs https://sfhajji.github.io/guide-assistant
