@@ -14,7 +14,11 @@ const ctx = vm.createContext({ window, console, Intl, fetch, AbortController, se
 for (const f of ["dico", "declare", "moteur", "modele"]) vm.runInContext(readFileSync(`src/assistant/${f}.js`, "utf8"), ctx);
 const index = JSON.parse(readFileSync("scratch/idx/index.json", "utf8"));
 const sim = { comparatif: (b, m) => [["Classe 1", "classe1"], ["Classe 1a", "classe1a"], ["Classe 2", "classe2"]].map(c => ({ label: c[0], classe: c[1], res: { netMensuel: b / m * 0.7 }, resImpatrie: { netMensuel: b / m * 0.8 } })) };
-const M = window.Moteur.creer(index, { DICO: window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE, sim, modele: avecModele ? window.ASSISTANT_MODELE : null });
+let vecteurs = null;
+try { const b = readFileSync("src/assistant/vecteurs.bin"); vecteurs = new Float32Array(b.buffer, b.byteOffset, b.length / 4); } catch (e) {}
+const nomsC = JSON.parse(readFileSync("scratch/idx/index.json", "utf8")).communes || [];
+const dico = window.DICO.map(d => (d.id === "communes" ? { ...d, mots: d.mots.filter(m => m !== "__COMMUNES__").concat(nomsC) } : d));
+const M = window.Moteur.creer(index, { DICO: dico, REFUS: window.REFUS, DECLARE: window.DECLARE, sim, modele: avecModele ? window.ASSISTANT_MODELE : null, vecteurs: avecModele ? vecteurs : null });
 const Q = readFileSync(file, "utf8").split("\n").filter(Boolean).map(l => JSON.parse(l));
 const pageDe = p => {
   if (!p) return null;
@@ -34,6 +38,19 @@ await Promise.all(Array.from({ length: avecModele ? 5 : 1 }, async () => {
   }
 }));
 if (avecModele) { const j = window.ASSISTANT_MODELE.journal; const ms = j.map(x => x.ms).sort((a, b) => a - b); console.log(`appels ${j.length} par question ${(j.length / rows.length).toFixed(2)} ms médian ${ms[ms.length >> 1]} p90 ${ms[Math.floor(ms.length * 0.9)]}`); }
+if (avecModele && rest.includes("--juge")) {
+  let k = 0;
+  const aJuger = rows.filter(r => r.note.o === "faux" && !String(r.note.pourquoi || "").startsWith("dit") && (r.q.value || (r.q.gold || []).length));
+  await Promise.all(Array.from({ length: 5 }, async () => {
+    while (k < aJuger.length) {
+      const r = aJuger[k++];
+      const attendu = [r.q.value, ...(r.q.gold || []).map(g => g.contains)].filter(Boolean).join(" / ");
+      const j = await window.ASSISTANT_MODELE.juger(r.q.q, attendu, texteDe(r.res).slice(0, 900));
+      if (j && j.meme_reponse) { r.note = { o: "juste", juge: true }; }
+    }
+  }));
+  console.log("relevés par le juge :", rows.filter(r => r.note.juge).length, "sur", aJuger.length);
+}
 const tot = tranches(rows.map(r => ({ ...r, q: { ...r.q, tout: "tout" } })), "tout")[0];
 console.log(JSON.stringify(tot));
 for (const c of ["route", "verdict"]) for (const t of tranches(rows, c)) console.log(`${t.tranche.padEnd(28)} n=${String(t.n).padStart(3)} juste=${String(t.juste).padStart(3)} faux=${String(t.faux).padStart(3)} prudent=${String(t.prudent).padStart(3)} coupe=${t.coupe}`);

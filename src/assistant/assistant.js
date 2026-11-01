@@ -7,12 +7,15 @@
   const large = () => window.innerWidth >= 1100;
   const norm = s => String(s).replace(/\s+/g, " ").trim();
 
-  let M = null, index = null, dernier = null;
+  let M = null, index = null, dernier = null, vecteurs = null;
   const session = [];
   const pret = fetch("assistant/index.json").then(r => r.json()).then(x => {
     index = x;
-    M = window.Moteur.creer(x, { DICO: window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE, sim: window.SIM,
-      paramsModifies: !!localStorage.getItem("luxguide.simulateur.params.v1"), get modele() { return modeleActif(); } });
+    const dico = window.DICO.map(d => (d.id === "communes" ? { ...d, mots: d.mots.filter(m => m !== "__COMMUNES__").concat(x.communes || []) } : d));
+    window.DICO_FINAL = dico;
+    M = window.Moteur.creer(x, { DICO: dico, REFUS: window.REFUS, DECLARE: window.DECLARE, sim: window.SIM,
+      paramsModifies: !!localStorage.getItem("luxguide.simulateur.params.v1"), get modele() { return modeleActif(); }, get vecteurs() { return vecteurs; } });
+    fetch("assistant/vecteurs.bin").then(r => (r.ok ? r.arrayBuffer() : null)).then(b => { if (b && b.byteLength === x.lignes.length * 256 * 4) vecteurs = new Float32Array(b); }).catch(() => {});
     return M;
   });
   const modeleActif = () => (window.ASSISTANT_MODELE && !sansModele() ? window.ASSISTANT_MODELE : null);
@@ -343,7 +346,7 @@
 
   // For the measurements in CI: the same engine, without drawing cards.
   const moteurs = {};
-  const optionsMode = m => ({ DICO: m === "sans_dico" ? [] : window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE, sim: window.SIM, modele: m === "complet" ? window.ASSISTANT_MODELE : null });
+  const optionsMode = m => ({ DICO: m === "sans_dico" ? [] : window.DICO_FINAL, REFUS: window.REFUS, DECLARE: window.DECLARE, sim: window.SIM, modele: m === "complet" ? window.ASSISTANT_MODELE : null, get vecteurs() { return m === "complet" ? vecteurs : null; } });
   const propre = o => JSON.parse(JSON.stringify(o, (k, v) => (k === "trace" || k === "row" || k === "autour" ? undefined : v)));
   async function evaluer(q, pageId, mode) {
     if (mode === "origine") {
@@ -363,6 +366,6 @@
     catch (e) { return { parts: [{ statut: "ERREUR", texte: e.message }] }; }
   }
 
-  window.ASSISTANT = { envoyer, atteindre, localiser, voir, pageCourante, pret, evaluer, pages: () => index.pages.map(p => ({ id: p.id })), journalModele: () => window.ASSISTANT_MODELE ? window.ASSISTANT_MODELE.journal : [] };
+  window.ASSISTANT = { envoyer, atteindre, localiser, voir, pageCourante, pret, evaluer, pages: () => index.pages.map(p => ({ id: p.id })), juger: (q, a, m) => window.ASSISTANT_MODELE.juger(q, a, m), journalModele: () => window.ASSISTANT_MODELE ? window.ASSISTANT_MODELE.journal : [] };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", installer); else installer();
 })();

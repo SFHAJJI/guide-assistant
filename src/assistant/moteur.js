@@ -61,6 +61,8 @@
     ["r19", "Par défaut : les lignes du guide", "fiche_qa"],
     ["r20", "Rien de plus : balayage de toutes les lignes", "absence"],
     ["r21", "Hors du sujet du guide, sans balayage", "hors_sujet"],
+    ["r22", "Épargne et retraite : lue, sans modèle", "epargne_qa"],
+    ["r23", "Question à plusieurs sens, dit par le modèle", "clarifier"],
   ];
 
   function creer(index, opt = {}) {
@@ -263,6 +265,14 @@
     }
 
     const MIN_SCORE = opt.minScore ?? 4, MIN_MARGE = opt.minMarge ?? 1.5;
+    // Offline vectors, one per line, 256 numbers each, normalised. One vote among others [7C:252-258].
+    function parVecteur(q, k) {
+      const V = opt.vecteurs, d = 256, n = L.length;
+      const qn = Math.hypot(...q);
+      const sc = new Float32Array(n);
+      for (let i = 0; i < n; i++) { let s = 0; for (let j = 0; j < d; j++) s += V[i * d + j] * q[j]; sc[i] = s / qn; }
+      return [...sc.keys()].sort((a, b) => sc[b] - sc[a]).slice(0, k);
+    }
 
     function source(l) {
       const p = pageById.get(l.p);
@@ -329,6 +339,7 @@
           return { statut: "CLARIFIER", texte: `« ${multi.mot} » peut vouloir dire plusieurs choses dans le guide. Vous parlez de quoi ?`,
             options: multi.c.sens.map(s => ({ label: s.label, envoie: `${row.original} (${s.ajoute})`, defaut: s === defaut })), champ: "sens" };
         }
+        if (row.ambigu && row.ambiguOptions?.length >= 2) return { statut: "CLARIFIER", texte: "Votre question peut se comprendre de plusieurs façons. Laquelle ?", champ: "sens", options: row.ambiguOptions.slice(0, 3).map(o => ({ label: o, envoie: o })), parModele: true };
         return { statut: "CLARIFIER", texte: "C'est-à-dire ? Dites-moi de quoi vous parlez.",
           options: [{ label: "Un loyer ou une caution", envoie: "Quelle garantie locative un bailleur peut-il demander ?" }, { label: "Un salaire", envoie: "Quelle différence entre classe 1 et classe 2 ?" }, { label: "L'immatriculation", envoie: "Combien coûte l'immatriculation ?" }], champ: "sujet" };
       },
@@ -490,6 +501,22 @@
         return { statut: "REPONSE", lignesLibres: [v.texte], annonce: { en_vigueur: v.en_vigueur, annonce: v.annonce }, sources: [{ page: v.source, section: "" }], note: ["Annoncé, pas en vigueur, selon le guide à sa date. Cela a pu changer depuis."], lien: { route: v.route, label: "Ouvrir le simulateur" } };
       },
 
+      epargne_qa(row) {
+        const st = new Set(row.mots.map(stem));
+        let best = null, bs = 0;
+        for (const e of index.entrees) {
+          e.sts = e.sts || [e.question, ...e.variantes].map(t => new Set(content(t).map(stem)));
+          for (const v of e.sts) {
+            let n = 0; for (const x of st) if (v.has(x)) n++;
+            const d = st.size + v.size ? 2 * n / (st.size + v.size) : 0;
+            if (d > bs) { bs = d; best = e; }
+          }
+        }
+        if (!best || bs < 0.34) return null;
+        const ls = best.lignes.map(i => byId.get(i));
+        return { statut: "REPONSE", titre: best.question, lignes: ls.slice(0, 3).map(vue), autour: ls.map(vue), sources: [source(ls[0])], nomodel: true, note: ["Réponse écrite à l'avance par l'auteur du guide. Aucun modèle ne lit cette section."] };
+      },
+
       // B2: direct only if the concept and the shape match. False direct breaks trust.
       faq_cache(row) {
         const st = new Set(row.mots.map(stem));
@@ -513,8 +540,8 @@
         const modele = opt.modele || null;
         const f = chercher(row, ctx);
         T.push({ qui: "code", etape: "Détecteurs", detail: `${f.nb} lignes touchées · marge ${f.marge.toFixed(1)}`, json: { audit: f.audit } });
-        if (!f.top.length) return null;
-        let c = f.top[0];
+        if (!f.top.length && !(modele && opt.vecteurs)) return null;
+        let c = f.top[0] || { s: 0, l: { nomodel: false, k: "" }, sc: { mots: new Set(), dico: 0 }, couverture: 0, vide: true };
         const clair = c.s >= MIN_SCORE && f.marge >= MIN_MARGE;
         let arbitre = null;
         // The words must really land here. A zero on one of the reader's words is not ignored [7A:23].
@@ -522,21 +549,38 @@
         const assezFort = x => row.epingle ? x.s > 0
           : motsAbsents.length && x.couverture < 0.6 ? false
           : (x.sc.mots.size >= 2 && x.couverture >= 0.5) || ((x.sc.dico >= 1 || x.sc.dicoPage) && x.couverture >= 0.33) || (f.stems.length === 1 && x.couverture === 1);
-        if (!assezFort(c) && !modele && !0) { T.push({ qui: "code", etape: "Refus", detail: `meilleure ligne trop faible (couverture ${c.couverture.toFixed(2)}${motsAbsents.length ? ", mots absents : " + motsAbsents.join(", ") : ""})` }); return null; }
+        if (!assezFort(c) && !modele) { T.push({ qui: "code", etape: "Refus", detail: `meilleure ligne trop faible (couverture ${c.couverture.toFixed(2)}${motsAbsents.length ? ", mots absents : " + motsAbsents.join(", ") : ""})` }); return null; }
         const savingsDansMarge = f.top.slice(0, 4).some(x => x.l.nomodel && c.s - x.s < MIN_MARGE);
         if (!clair && savingsDansMarge && !c.l.nomodel) {
           const autre = f.top.find(x => x.l.nomodel);
           return { statut: "CLARIFIER", texte: "Je peux comprendre deux choses. Laquelle ?", champ: "lieu",
             options: [{ label: pageById.get(c.l.p)?.titre || c.l.p, envoie: `${row.original} (${pageById.get(c.l.p)?.titre})` }, { label: "Section épargne : " + autre.l.s, envoie: autre.l.s }] };
         }
-        if ((!clair || !assezFort(c)) && modele && !c.l.nomodel) {
+        if ((c.vide || !clair || !assezFort(c)) && modele && !c.l.nomodel) {
           row.appels = (row.appels || 0) + 1;
           const glossaire = row.concepts.slice(0, 2).map(x => pageById.get((x.c.pages || [])[0])?.resume).filter(Boolean).join(" ");
-          const cands = f.top.filter(x => !x.l.nomodel).slice(0, 8);
-          arbitre = await modele.arbitre(row, cands.map(x => ({ id: x.l.id, section: pageById.get(x.l.p)?.titre + " › " + x.l.s, methods: ["mots", "dico", "valeur", "titre", "page", "etiquette"].filter(k => k === "mots" ? x.sc.mots.size : x.sc[k]), snippet: autour(x.l).map(y => y.t).join(" ").slice(0, 320) })), glossaire);
+          let cands = f.top.filter(x => !x.l.nomodel).slice(0, 5);
+          if (opt.vecteurs && modele.embed) {
+            const v = await modele.embed(row.corrigee || row.original);
+            if (v) {
+              const proches = parVecteur(v, 14).filter(i => !L[i].nomodel && COEF[L[i].k] !== 0 && !cands.some(x => x.l.g === L[i].g));
+              const vus2 = new Set();
+              for (const i of proches) { if (vus2.has(L[i].g) || cands.length >= 10) continue; vus2.add(L[i].g); cands.push(f.top.find(x => x.l.id === L[i].id) || { s: 0, l: L[i], sc: { mots: new Set(), dico: 0, vecteur: 1 }, couverture: 0 }); }
+              T.push({ qui: "modèle", etape: "Vecteurs", detail: `${vus2.size} passages proches ajoutés au dossier` });
+            }
+          }
+          if (!cands.length) return null;
+          arbitre = await modele.arbitre(row, cands.map(x => ({ id: x.l.id, section: pageById.get(x.l.p)?.titre + " › " + x.l.s, methods: ["mots", "dico", "valeur", "titre", "page", "etiquette", "vecteur"].filter(k => k === "mots" ? x.sc.mots.size : x.sc[k]), snippet: autour(x.l).map(y => y.t).join(" ").slice(0, 320) })), glossaire);
           if (arbitre) {
             T.push({ qui: "modèle", etape: "Arbitre", detail: arbitre.raison || "", json: arbitre });
             const pick = arbitre.choix && cands.find(x => x.l.id === arbitre.choix);
+            if (arbitre.conflit) {
+              const prim = (arbitre.roles || []).filter(x => x.role === "primary").map(x => cands.find(y => y.l.id === x.id)).filter(Boolean);
+              if (prim.length >= 2) {
+                T.push({ qui: "modèle", etape: "Désaccord dans le guide", detail: "signalé par l'arbitre, à relire" });
+                return { statut: "DEUX_CHOSES", lignes: prim.slice(0, 2).map(x => vue(x.l)), sources: prim.slice(0, 2).map(x => source(x.l)), parModele: true, note: ["Ce désaccord est signalé par le modèle, je ne l'ai pas déclaré après lecture."] };
+              }
+            }
             if (pick) c = pick;
             else { T.push({ qui: "code", etape: "Arbitre écouté", detail: "aucun candidat ne répond" }); return null; }
           } else T.push({ qui: "modèle", etape: "Arbitre", detail: "pas de réponse dans le temps : meilleure ligne du code, signalée" });
@@ -603,6 +647,7 @@
       if (/^(bonjour|salut|bonsoir|hello|coucou|merci|hi|thanks)\b[ ,.!a-z]{0,14}$/.test(q) && row.mots.length <= 1) { dit("r3"); return plan; }
       if (REFUS.some(r => r.re.test(q))) { dit("r4"); return plan; }
       if (row.horsSujet) { dit("r21"); return plan; }
+      if (row.ambigu && !row.concepts.length) { dit("r23"); return plan; }
       const multi = row.concepts.find(c => c.c.sens && !c.c.sens.some(s => s.mots.some(m => q.includes(plain(m)))));
       if (multi) { dit("r6", multi.mot); return plan; }
       if (!row.concepts.length && !row.herite && !row.mots.length && !ctx.page) { dit("r7"); return plan; }
@@ -615,6 +660,7 @@
         if (/\bastuce|retour d'experience\b/.test(q)) dit("r15");
         if (/\b(resume\w*|en bref|l'essentiel)\b/.test(q)) dit("r16");
         if ((DECLARE.valeurs || []).some(v => v.quand.some(w => q.includes(plain(w))))) dit("r17");
+        if (ctx.page?.id === "prevoyance" || /\b(111 ?bis|prevoyance|retraite complementaire|pension privee|epargne retraite|epargne-retraite|vieillesse)\b/.test(q)) dit("r22");
         if (row.concepts.some(c => c.id === "sinistre") && /\b(couvert|couverte|indemnise\w*|assurance|assureur|garanti\w*|suis-je|vol\w*|contrat\w*|exclu\w*)\b/.test(q)) dit("r12");
         if (row.concepts.some(c => c.id === "aides") && (row.forme !== "single" || /\b(au[- ]dessus|plus de|moins de|sous)\b/.test(q))) dit("r13");
         if (/\b(que faire|quoi faire|que dois-je faire|premier mois|avant le depart|premiere semaine|etapes)\b/.test(q) && !/\bvehicule|voiture|immatricul\w*\b/.test(q)) dit("r14");
@@ -652,6 +698,7 @@
           if (parse.type && row.type === "texte") row.type = parse.type;
           if (parse.forme && row.forme === "single") row.forme = parse.forme;
           row.langue = parse.langue;
+          if (parse.ambigu) { row.ambigu = true; row.ambiguOptions = parse.options; }
         } else T.push({ qui: "modèle", etape: "Compréhension", detail: "pas de réponse dans le temps : je continue sans" });
       }
       T.push({ qui: "code", etape: "Question", detail: `${row.concepts.length ? "concept " + row.concepts.map(c => c.mot).join(", ") : "aucun concept"} · ${row.forme} · ${row.type}`, json: publique(row) });

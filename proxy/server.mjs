@@ -24,8 +24,10 @@ Lis la question (fautes, SMS, autre langue possibles) et remplis :
 - type : montant, duree, booleen, definition, procedure ou texte.
 - forme : single, liste ou compte.
 - langue : fr, en, de, pt ou autre.
-- dans_le_sujet : false seulement si la question n'a aucun rapport avec une installation au Luxembourg.`,
-    schema: obj({ corrigee: str, termes: strs, concepts: strs, type: { enum: ["montant", "duree", "booleen", "definition", "procedure", "texte"] }, forme: { enum: ["single", "liste", "compte"] }, langue: str, dans_le_sujet: { type: "boolean" } }),
+- dans_le_sujet : false seulement si la question n'a aucun rapport avec une installation au Luxembourg.
+- ambigu : true seulement si la question a plusieurs sens plausibles et qu'on ne peut pas choisir sans demander (le mot « limite » seul, « et pour moi ? »). Sinon false.
+- options : si ambigu, 2 ou 3 reformulations courtes, chacune une question complète. Sinon liste vide.`,
+    schema: obj({ corrigee: str, termes: strs, concepts: strs, type: { enum: ["montant", "duree", "booleen", "definition", "procedure", "texte"] }, forme: { enum: ["single", "liste", "compte"] }, langue: str, dans_le_sujet: { type: "boolean" }, ambigu: { type: "boolean" }, options: strs }),
     entree: b => `Question : ${b.question}\nPage ouverte : ${b.page || "aucune"}\nConcepts possibles :\n${(b.concepts || []).join("\n")}`,
   },
   // One call, candidates side by side: picks the line that answers, with a role and a reason for each.
@@ -61,6 +63,13 @@ Attention : une phrase peut commencer par « Oui » et dire le contraire de ce q
   },
 };
 TACHES.relire = { ...TACHES.lire, fort: true };
+// Offline only: grades a card against the expected answer. Never reaches a reader.
+TACHES.juger = {
+  fort: true,
+  system: `Tu notes une évaluation. On te donne une question, la réponse attendue et ce que l'assistant a montré. meme_reponse = true seulement si ce qui est montré donne la même information que l'attendu sur le point demandé, même avec d'autres mots. Une réponse sur le même thème qui ne dit pas l'attendu vaut false.`,
+  schema: obj({ meme_reponse: { type: "boolean" }, raison: str }),
+  entree: b => `Question : ${b.question}\nAttendu : ${b.attendu}\nMontré : ${b.montre}`,
+};
 
 async function appeler(nom, corps) {
   const t = TACHES[nom];
@@ -88,6 +97,16 @@ async function appeler(nom, corps) {
   return { sortie: JSON.parse(j.choices[0].message.content), _meta: { modele: j.model || deployment, gabarit: `${nom}@${VERSION}`, usage: j.usage, ms: Date.now() - debut } };
 }
 
+async function embed(corps) {
+  const r = await fetch(`${LLM_ENDPOINT.replace(/\/$/, "")}/openai/deployments/text-embedding-3-small/embeddings?api-version=2024-10-21`, {
+    method: "POST", headers: { "content-type": "application/json", "api-key": LLM_KEY },
+    body: JSON.stringify({ input: corps.textes, dimensions: 256 }),
+  });
+  if (!r.ok) throw new Error(`embed ${r.status}`);
+  const j = await r.json();
+  return { vecteurs: j.data.map(d => d.embedding) };
+}
+
 createServer(async (req, res) => {
   const origine = req.headers.origin || "";
   const cors = ORIGINES.has(origine) ? { "access-control-allow-origin": origine, vary: "origin" } : {};
@@ -95,15 +114,15 @@ createServer(async (req, res) => {
   if (req.method === "OPTIONS") return fin(204, {});
   if (req.url === "/health") return fin(200, { ok: true, modele: MODELE, fort: MODELE_FORT || null });
   const nom = req.url.replace(/^\//, "");
-  if (req.method !== "POST" || !TACHES[nom]) return fin(404, { erreur: "route" });
+  if (req.method !== "POST" || !(TACHES[nom] || nom === "embed")) return fin(404, { erreur: "route" });
   if (!ORIGINES.has(origine)) return fin(403, { erreur: "origine" });
   const auj = new Date().toISOString().slice(0, 10);
   if (auj !== jour) { jour = auj; compte = 0; }
   if (++compte > +PLAFOND_JOUR) return fin(429, { erreur: "plafond du jour" });
   let brut = "";
-  req.on("data", d => { brut += d; if (brut.length > 20000) req.destroy(); });
+  req.on("data", d => { brut += d; if (brut.length > 400000) req.destroy(); });
   req.on("end", async () => {
-    try { fin(200, await appeler(nom, JSON.parse(brut))); }
+    try { fin(200, nom === "embed" ? await embed(JSON.parse(brut)) : await appeler(nom, JSON.parse(brut))); }
     catch (e) { console.error(nom, e.message); fin(502, { erreur: "modele" }); }
   });
 }).listen(+PORT);

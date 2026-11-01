@@ -69,9 +69,9 @@ if (existsSync("src/assistant/assistant.js")) {
 <script src="assistant/assistant.js"></script>\n<p class="demo-credit">Copie de démonstration du guide public lux-guide.github.io (version ${COMMIT}). Seul l'assistant est ajouté. <a href="../machine/">Comment il fonctionne</a></p>\n</body>`);
   // The guide says nothing leaves the browser. With a model that stops being true, so the sentences change with it.
   const dire = (avant, apres) => { if (!avant.test(html)) throw new Error("privacy: " + avant); html = html.replace(avant, apres); };
-  dire(/Tout est enregistré dans ce navigateur, et rien n'en sort./, "Tout est enregistré dans ce navigateur. Seules les questions posées à l'assistant en sortent, sans être enregistrées, quand le modèle est activé.");
-  dire(/et rien n'est envoyé às+personne./, "et rien n'est envoyé à personne, sauf les questions posées à l'assistant quand le modèle est activé : elles passent par un service de cette démonstration, qui ne les enregistre pas. La case « Sans modèle » coupe cet envoi.");
-  dire(/Les autres onglets ne font aucun appel réseau./, "Les autres onglets ne font aucun appel réseau, sauf l'assistant quand le modèle est activé.");
+  dire(/Tout est enregistré dans ce navigateur, et rien n'en sort\./, "Tout est enregistré dans ce navigateur. Seules les questions posées à l'assistant en sortent, sans être enregistrées, quand le modèle est activé.");
+  dire(/et rien n'est envoyé à\s+personne\./, "et rien n'est envoyé à personne, sauf les questions posées à l'assistant quand le modèle est activé : elles passent par un service de cette démonstration, qui ne les enregistre pas. La case « Sans modèle » coupe cet envoi.");
+  dire(/Les autres onglets ne font aucun appel réseau\./, "Les autres onglets ne font aucun appel réseau, sauf l'assistant quand le modèle est activé.");
   writeFileSync(idx, html);
   cpSync("src/assistant", join(G, "assistant"), { recursive: true });
 }

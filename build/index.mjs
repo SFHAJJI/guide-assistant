@@ -211,7 +211,17 @@ const stats = {
   par_type: lignes.reduce((a, l) => (a[l.k] = (a[l.k] || 0) + 1, a), {}),
 };
 mkdirSync(OUT, { recursive: true });
-const index = { stats, pages, plan, lignes, rangees, faq, verdicts, parcours, cartes, entrees, renvois, addrs, arbre, statuts: UI.STATUTS_FR, outils: UI.OUTILS_OFFICIELS };
+// Commune names, read so that a question about one goes to the maps tool instead of a wrong page.
+let communes = [];
+try {
+  const c = collect(join(SITE, "cartes/communes_kb.js"));
+  const data = c["window.COMMUNES"] || Object.values(c)[0];
+  const liste = Array.isArray(data) ? data : data?.communes || data?.liste || Object.values(data || {}).find(Array.isArray) || [];
+  communes = [...new Set(liste.map(x => (x && (x.nom || x.name || x.commune)) || null).filter(n => typeof n === "string" && n.length > 3 && n !== "Luxembourg"))]
+    .map(n => n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+} catch (e) { console.error("communes:", e.message); }
+stats.communes = communes.length;
+const index = { communes, stats, pages, plan, lignes, rangees, faq, verdicts, parcours, cartes, entrees, renvois, addrs, arbre, statuts: UI.STATUTS_FR, outils: UI.OUTILS_OFFICIELS };
 writeFileSync(join(OUT, "index.json"), JSON.stringify(index));
 
 const csv = (rows, cols) => [cols.join(";"), ...rows.map(r => cols.map(c => {
