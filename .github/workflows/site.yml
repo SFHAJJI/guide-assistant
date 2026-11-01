@@ -3,6 +3,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      mesurer:
+        description: Run the sealed measurements
+        type: boolean
+        default: false
 permissions:
   contents: read
   pages: write
@@ -29,7 +34,7 @@ jobs:
       - name: Build
         run: |
           node build/assemble.mjs guide-src dist "${GUIDE_COMMIT:0:7}"
-          node build/index.mjs guide-src dist/guide/assistant "${GUIDE_COMMIT:0:7}"
+          node build/index.mjs dist/guide dist/guide/assistant "${GUIDE_COMMIT:0:7}"
       - name: Code tests
         run: GUIDE_SRC=guide-src node --test tests/*.test.mjs
       - name: Browser checks
@@ -39,11 +44,16 @@ jobs:
           npx http-server dist -p 8080 -s &
           sleep 2
           node checks/browser.mjs http://localhost:8080
+      - name: Sealed measurements
+        if: ${{ inputs.mesurer }}
+        run: node checks/mesures.mjs http://localhost:8080 eval/sealed.jsonl mesures.json "${GUIDE_COMMIT:0:7}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: shots
-          path: shots
+          path: |
+            shots
+            mesures.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

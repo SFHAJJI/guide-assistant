@@ -98,11 +98,13 @@ async function aiguillage() {
   vue.appendChild(el("h2", null, "Les appels au modèle"));
   vue.appendChild(table([
     { appel: "parse", quand: "aucun concept trouvé par le code", rend: "des identifiants de concepts d'une liste fermée, une forme, un type, des termes de recherche", "si échec": "la ligne du code, et la trace le dit" },
-    { appel: "arbitre", quand: "marge plate, 6 candidats au plus", rend: "un identifiant et une raison", "si échec": "la meilleure ligne du code, signalée non arbitrée" },
+    { appel: "vecteurs", quand: "marge plate : ajoute au dossier les passages proches", rend: "des identifiants de lignes. Une voix de plus, jamais pour conclure à une absence", "si échec": "le dossier reste celui du code" },
+    { appel: "arbitre", quand: "marge plate, 10 candidats au plus", rend: "un identifiant et une raison", "si échec": "la meilleure ligne du code, signalée non arbitrée" },
+    { appel: "vérification", quand: "seulement sur le choix de l'arbitre, par un modèle d'une autre famille", rend: "ce passage répond, ou non", "si échec": "s'il ne répond pas : rien dans le guide sous ces mots" },
     { appel: "lire", quand: "question oui/non, sur la ligne de la règle", rend: "oui, non ou ça dépend, avec les identifiants des lignes", "si échec": "la règle seule, sans étiquette" },
     { appel: "seconde lecture", quand: "seulement si une étiquette oui/non va s'afficher", rend: "son propre oui, non ou ça dépend, sans voir le premier", "si échec": "désaccord : la règle seule" },
   ], ["appel", "quand", "rend", "si échec"]));
-  vue.appendChild(el("p", "note", "Le modèle n'écrit jamais la phrase de la réponse. Il écrit trois autres choses, marquées comme telles : des termes de recherche, une raison dans la trace, une traduction à côté du français."));
+  vue.appendChild(el("p", "note", "Le modèle n'écrit jamais la phrase de la réponse. Il écrit trois autres choses, marquées comme telles : des termes de recherche, une raison dans la trace, des reformulations proposées quand une question a plusieurs sens."));
 }
 
 async function mesures() {
@@ -124,6 +126,8 @@ function limites() {
     "La section épargne reste intacte : pas de surlignage, pas de modèle sur ses lignes.",
     "Les comparaisons de contrats portent sur des extraits de quatre contrats anonymisés. Elles ne disent rien du contrat du lecteur et ne classent personne.",
     "Les questions de test viennent d'un autre auteur et n'ont pas été relues : les erreurs d'étiquette sont comptées à part. La couverture par famille n'a pas été confirmée. Les deux auteurs peuvent partager les mêmes angles morts.",
+    "Une question posée dans une autre langue reçoit la phrase du guide en français. Je n'ai pas construit la traduction.",
+    "Le dernier mot sur un oui ou un non revient à deux lectures de deux modèles : si elles divergent, je montre la règle seule. Ce n'est pas une garantie.",
     "Copie du guide à une version figée : ses dates sont celles de cette version.",
   ].forEach(t => vue.appendChild(el("p", "note", t)));
 }

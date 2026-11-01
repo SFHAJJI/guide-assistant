@@ -188,7 +188,7 @@ const $ = cheerio.load(readFileSync(join(SITE, "index.html"), "utf8"));
 const IMAGES = { total: $("img").length, utiles: 0 };
 $(".panel[id^=panel-]").each((_, el) => {
   const id = $(el).attr("id").replace("panel-", "");
-  if (["admin", "assistant"].includes(id)) return;
+  if (id === "assistant") return;
   const pid = `panel_${id}`;
   const textes = [];
   pages.push({ id: pid, route: `#${id}`, titre: $(el).find("h1,h2").first().text().trim() || id, type: "panneau", flags: {}, tags: [id], hash: "" });

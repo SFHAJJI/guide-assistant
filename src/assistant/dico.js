@@ -43,6 +43,7 @@ window.DICO = [
   { id: "conges", pages: ["conges"], mots: ["conge", "conges", "jours feries", "vacances", "holiday", "urlaub"] },
   { id: "achat", pages: ["achat", "interets"], mots: ["acheter", "achat", "notaire", "emprunt", "pret immobilier", "credit immobilier", "mortgage", "buy a house"] },
   { id: "dechets", pages: ["dechets"], mots: ["dechets", "poubelle", "recyclage", "valorlux", "trash", "garbage"] },
+  { id: "donnees", pages: ["panel_admin"], mots: ["mes donnees", "donnees personnelles", "confidentialite", "cookies", "stocke", "enregistre mes", "envoye", "envoyees", "qui voit", "privacy", "rgpd", "mesure d'audience", "effacer mes"] },
   { id: "communes", tool: "#cartes", titre: "Cartes et communes", mots: ["__COMMUNES__", "quelle commune", "communes", "quartier", "ecoles autour", "loyer par commune", "prix au m2", "prix du m2"] },
   { id: "lignes", tool: "#lignes", titre: "Lignes de transport", mots: ["quelle ligne", "horaire", "arret de bus", "temps de trajet"] },
   { id: "jeux", tool: "#jeux", titre: "Aires de jeux", mots: ["aire de jeux", "aires de jeux", "plaine de jeux"] },
