@@ -394,6 +394,16 @@
         if (!f.top.length && !(modele && opt.vecteurs)) return null;
         let c = f.top[0] || { s: 0, l: { nomodel: false, k: "" }, sc: { mots: new Set(), dico: 0 }, couverture: 0, vide: true };
         const clair = c.s >= MIN_SCORE && f.marge >= MIN_MARGE;
+        // "How do I...": one passage is rarely the whole procedure. If the page is the right one, show what the guide keeps from it and open it.
+        const parPage = () => {
+          const id = c.l.p;
+          if (row.type !== "procedure" || !id || !(id === f.pagePlan || row.concepts.some(x => (x.c.pages || []).includes(id)))) return null;
+          const ls = L.filter(l => l.p === id && (l.k === "chapo" || l.k === "retenir")).slice(0, 4);
+          if (!ls.length) return null;
+          const p = pageById.get(id);
+          T.push({ qui: "code", etape: "La fiche", detail: "une procédure : le passage seul ne suffit pas, la fiche répond" });
+          return { statut: "REPONSE", titre: `${p.titre} : ce que le guide retient`, lignes: ls.map(vue), sources: [source(ls[0])], ailleurs: ctx.page && id !== ctx.page.id ? p.titre : null, lien: { route: p.route, label: `Ouvrir : ${p.titre}` } };
+        };
         let arbitre = null;
         // The words must really land here. A zero on one of the reader's words is not ignored [7A:23].
         const motsAbsents = f.stems.filter(x => !inv.has(x));
@@ -438,6 +448,8 @@
               const v = modele.verifier ? await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, autour(c.l).map(y => y.t).join(" ").slice(0, 700)) : null;
               if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
               if (v && !v.repond) {
+                const fiche = parPage();
+                if (fiche) return fiche;
                 // A number was asked, the place was found, and it carries none: that is the guide's rule without its figure.
                 const re = RE_TYPE[row.type];
                 if ((row.type === "montant" || row.type === "duree") && !re.test(autour(c.l).map(y => plain(y.t)).join(" "))) {
@@ -454,7 +466,7 @@
           if (clair && modele && modele.verifier && opt.verifierTout !== false && !c.l.nomodel && !c.l.row) {
             const v = await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, autour(c.l).map(y => y.t).join(" ").slice(0, 700));
             if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
-            if (v && !v.repond) { row.proche = c.l; return null; }
+            if (v && !v.repond) { const fiche = parPage(); if (fiche) return fiche; row.proche = c.l; return null; }
           }
         }
         if (!assezFort(c) && !arbitre?.choix) { T.push({ qui: "code", etape: "Refus", detail: `meilleure ligne trop faible (couverture ${c.couverture.toFixed(2)})` }); return null; }

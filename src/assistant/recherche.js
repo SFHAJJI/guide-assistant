@@ -82,7 +82,7 @@
         a.page = a.page || c.sc.page; a.titre = a.titre || c.sc.titre; a.mot = Math.max(a.mot, c.sc.mots.size);
         a.dico = a.dico || (c.sc.dico || c.sc.dicoPage ? 1 : 0); a.valeur = a.valeur || c.sc.valeur;
       }
-      return { top, marge, audit: audit.slice(0, 8), stems, nb: cands.length };
+      return { top, marge, audit: audit.slice(0, 8), stems, nb: cands.length, pagePlan };
     }
 
     const MIN_SCORE = opt.minScore ?? 4, MIN_MARGE = opt.minMarge ?? 1.5;

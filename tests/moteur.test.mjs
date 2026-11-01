@@ -159,6 +159,22 @@ test("the commune table: a cell, a comparison, a ranking, a missing figure", asy
   assert.strictEqual((await Mc.repondre("gini de niederanven", {})).parts[0].statut, "OUTIL");
 });
 
+test("a how-to whose passage is refused still opens the right page", async () => {
+  const appels = [];
+  const faux = { parse: async () => null, arbitre: async (r, c) => { appels.push("arbitre"); return { choix: c.find(x => x.id.startsWith("vehicule"))?.id || c[0].id, aucun: false, conflit: false, raison: "test", roles: [] }; }, verifier: async () => { appels.push("verifier"); return { repond: false, raison: "trop vague" }; }, lire: async () => null, relire: async () => null };
+  const Mm = window.Moteur.creer(index, { DICO: window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE, sim, modele: faux });
+  const r = await Mm.repondre("comment immatriculer ma voiture ?", {});
+  assert.ok(appels.includes("verifier"));
+  assert.strictEqual(r.parts[0].statut, "REPONSE");
+  assert.strictEqual(r.parts[0].lignes[0].p, "vehicule");
+  assert.ok(r.parts[0].lien.route.includes("vehicule"));
+});
+
+test("a definition takes the line that defines", async () => {
+  const r = await ask("c'est quoi le matricule");
+  assert.match(r.parts[0].lignes.map(l => l.t).join(" "), /appelé matricule/);
+});
+
 test("a bare 'Oui.' is never the whole answer", async () => {
   const r = await ask("le regime des impatries depend de la classe ?");
   assert.ok(!r.parts[0].lignes.some(l => /^(oui|non)\.?$/i.test(l.t.trim())));

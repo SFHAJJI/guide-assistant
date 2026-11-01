@@ -19,7 +19,7 @@
     montant: /\d[\d\s.,]*\s*(€|eur\b|euros?\b)|\d+(,\d+)?\s*%|\bgratuit|\bsans suppl|\b(un|deux|trois) mois\b/i,
     duree: /\b(\d+|un|une|[a-z-]*(deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente|quarante|cinquante|soixante)[a-z-]*)\s+(jours?|mois|ans?|annees?|semaines?|heures?)\b/,
     date: /\b(\d{1,2}(er)?\s+(janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre|octobre|novembre|decembre)|\d{4})\b/,
-    definition: /\b(appele\w*|designe\w*|signifie\w*|correspond\w*|c'est|est un|est une|sert a|permet de)\b/,
+    definition: /\b(appele\w*|designe\w*|signifie\w*|correspond\w*|est un|est une)\b/,
   };
 
   const MOTS_DE_TYPE = new Set(["cout", "prix", "montant", "tarif", "combien", "delai", "date", "duree", "frai", "poste"].map(stem));
