@@ -7,7 +7,8 @@
 #vous-lisez .vl-sous { width: 100%; opacity: .75; font-size: 12px; }
 #vous-lisez .chip, .carte .chip { font-size: 12px; padding: 3px 8px; border-radius: 12px; border: 1px solid rgba(128,128,128,.45); background: transparent; color: inherit; cursor: pointer; text-align: left; }
 .w-outils { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 4px 12px; font-size: 11px; opacity: .85; border-bottom: 1px solid rgba(128,128,128,.25); align-items: center; }
-.w-outils label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+#widget .w-outils label { all: unset; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; font-size: 11px; }
+#widget .w-outils input { all: revert; width: auto; height: auto; margin: 0; }
 .lien { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
 .msg.carte { max-width: 100%; width: 100%; box-sizing: border-box; font-size: 14px; line-height: 1.4; }
 .carte .mot { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #0b6b3a; margin-bottom: 4px; }

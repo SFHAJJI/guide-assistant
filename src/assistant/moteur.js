@@ -581,8 +581,13 @@
                 return { statut: "DEUX_CHOSES", lignes: prim.slice(0, 2).map(x => vue(x.l)), sources: prim.slice(0, 2).map(x => source(x.l)), parModele: true, note: ["Ce désaccord est signalé par le modèle, je ne l'ai pas déclaré après lecture."] };
               }
             }
-            if (pick) c = pick;
-            else { T.push({ qui: "code", etape: "Arbitre écouté", detail: "aucun candidat ne répond" }); return null; }
+            if (pick) {
+              c = pick;
+              // The arbiter ranked. A second model, which did not see the ranking, says whether this passage answers.
+              const v = modele.verifier ? await modele.verifier(row, pageById.get(c.l.p)?.titre + " › " + c.l.s, autour(c.l).map(y => y.t).join(" ").slice(0, 700)) : null;
+              if (v) T.push({ qui: "modèle", etape: "Vérification", detail: (v.repond ? "le passage répond : " : "le passage ne répond pas : ") + (v.raison || ""), json: v });
+              if (v && !v.repond) return null;
+            } else { T.push({ qui: "code", etape: "Arbitre écouté", detail: "aucun candidat ne répond" }); return null; }
           } else T.push({ qui: "modèle", etape: "Arbitre", detail: "pas de réponse dans le temps : meilleure ligne du code, signalée" });
         } else {
           T.push({ qui: clair ? "modèle" : "code", etape: clair ? "Modèle non appelé" : "Sans arbitre", detail: clair ? "marge claire" : "marge plate, pas de modèle disponible : meilleure ligne, non arbitrée" });
@@ -679,9 +684,9 @@
 
       // Parse call: only behind a code gate (D31), and never for what the first rules catch.
       const modele = opt.modele || null;
-      const zeros = row.mots.filter(m => !inv.has(stem(m)));
+      const zeros = row.mots.filter(m => !/\d/.test(m) && !inv.has(stem(m)));
       const premiere = decide(row, ctx)[0].id;
-      if (modele && row.mots.length && !["r1", "r2", "r3", "r4", "r6", "r8"].includes(premiere) && (!row.concepts.length || zeros.length || row.mots.length >= 6)) {
+      if (modele && row.mots.length && !["r1", "r2", "r3", "r4", "r6", "r8", "r9", "r10", "r11", "r12", "r13", "r14"].includes(premiere) && (!row.concepts.length || zeros.length || row.mots.length >= 6)) {
         row.appels = (row.appels || 0) + 1;
         const liste = concepts.filter(c => !c.tool).map(c => c.source === "auteur" ? `${c.id}: ${c.mots[0]}` : `${c.id}: ${c.mots.slice(0, 2).join(", ")}`);
         const parse = await modele.parse(row, liste, ctx.page?.titre);
@@ -758,9 +763,7 @@
         return { parts: [r], pattern: d.pattern, row: r.row };
       }
       if (d.parts.length > 1) {
-        const parts = [];
-        let c2 = { ...ctx };
-        for (const p of d.parts) { parts.push(await unePartie(p, c2)); }
+        const parts = await Promise.all(d.parts.map(p => unePartie(p, { ...ctx })));
         return { parts, pattern: d.pattern, row: parts[0].row };
       }
       const r = await unePartie(trim, ctx);

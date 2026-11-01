@@ -285,7 +285,8 @@
     if (r) {
       surligner(r);
       const e = r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement;
-      e.scrollIntoView({ block: "center", behavior: "smooth" });
+      const haut = e.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2;
+      window.scrollTo({ top: Math.max(0, haut), behavior: "smooth" });
     }
     majEntete();
     return reussi;

@@ -76,7 +76,8 @@ for (const [nom, qs, attendu] of J) {
   const p2 = await ctx.newPage();
   p2.on("pageerror", e => fails.push(nom + " pageerror: " + e.message));
   await p2.goto(`${BASE}/guide/${qs}`, { waitUntil: "load" });
-  await p2.waitForTimeout(1200);
+  await p2.waitForTimeout(800);
+  await p2.waitForFunction(() => !document.querySelector("#widget-log .attente"), null, { timeout: 45000 }).catch(() => {});
   const txt = await p2.evaluate(() => document.querySelector("#widget-log")?.textContent || "");
   check(`journey ${nom}`, txt.includes(attendu), txt.slice(0, 80));
   await p2.screenshot({ path: `shots/${nom}.png` });
@@ -85,7 +86,8 @@ for (const [nom, qs, attendu] of J) {
 // "Voir sur la page" really marks the passage, and the page says where we are.
 const p3 = await ctx.newPage();
 await p3.goto(`${BASE}/guide/?q=combien%20coutent%20les%20plaques%20%3F&p=fiche/vehicule&c=g-tab-couts`, { waitUntil: "load" });
-await p3.waitForTimeout(1200);
+await p3.waitForTimeout(800);
+await p3.waitForFunction(() => !document.querySelector("#widget-log .attente"), null, { timeout: 45000 }).catch(() => {});
 check("page recognised", (await p3.evaluate(() => document.querySelector("#vous-lisez")?.textContent || "")).includes("Immatriculer son véhicule"));
 await p3.click("#widget-log .btn-voir");
 await p3.waitForTimeout(600);
@@ -94,7 +96,8 @@ await p3.screenshot({ path: "shots/surligne.png" });
 const tel = await browser.newContext({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 const p4 = await tel.newPage();
 await p4.goto(`${BASE}/guide/?q=combien%20de%20caution%20et%20c%27est%20quoi%20le%20matricule%20%3F`, { waitUntil: "load" });
-await p4.waitForTimeout(1200);
+await p4.waitForTimeout(800);
+await p4.waitForFunction(() => !document.querySelector("#widget-log .attente"), null, { timeout: 45000 }).catch(() => {});
 await p4.screenshot({ path: "shots/telephone.png" });
 await p4.click("#widget-log .btn-voir");
 await p4.waitForTimeout(700);

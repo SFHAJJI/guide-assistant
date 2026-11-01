@@ -63,6 +63,14 @@ Attention : une phrase peut commencer par « Oui » et dire le contraire de ce q
   },
 };
 TACHES.relire = { ...TACHES.lire, fort: true };
+// Fresh check on a passage the arbiter picked, by another model family [10B:346].
+TACHES.verifier = {
+  fort: true,
+  system: `${SYSTEME_COMMUN}
+On te donne une question et un passage du guide. repond = true seulement si le passage donne vraiment l'information demandée, telle quelle. Si le passage parle du même thème sans répondre, ou répond à une question voisine (autre personne, autre cas, autre montant), repond = false. Dans le doute, false.`,
+  schema: obj({ repond: { type: "boolean" }, raison: str }),
+  entree: b => `Question : ${b.question}\nPassage (${b.section}) : ${b.passage}`,
+};
 // Offline only: grades a card against the expected answer. Never reaches a reader.
 TACHES.juger = {
   fort: true,
