@@ -31,7 +31,7 @@ jobs:
           node build/assemble.mjs guide-src dist "${GUIDE_COMMIT:0:7}"
           node build/index.mjs guide-src dist/guide/assistant "${GUIDE_COMMIT:0:7}"
       - name: Code tests
-        run: node --test tests/
+        run: GUIDE_SRC=guide-src node --test tests/*.test.mjs
       - name: Browser checks
         run: |
           npm i --no-save playwright@1.48 http-server@14
@@ -39,6 +39,11 @@ jobs:
           npx http-server dist -p 8080 -s &
           sleep 2
           node checks/browser.mjs http://localhost:8080
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots
+          path: shots
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

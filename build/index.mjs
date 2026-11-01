@@ -164,6 +164,16 @@ for (const c of AV.AVANTAGES) {
 
 // ---------- Épargne : lue, jamais donnée au modèle ----------
 const Q = collect(join(SITE, "prevoyance/app/questions.js"));
+const TP = collect(join(SITE, "prevoyance/app/prevoyance.js"));
+const T = TP.TABLE;
+const eur = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const MARQUES = {
+  plafond: eur(T.prevoyance.plafond), plafondPrecedent: eur(T.prevoyance.plafondPrecedent), annee: String(T.annee), anneePrecedente: String(T.anneePrecedente),
+  duree: String(T.prevoyance.dureeMinimaleAns), ageMax: String(T.prevoyance.ageMaxSouscription),
+  sortieMin: String(T.prevoyance.sortieMin), sortieMax: String(T.prevoyance.sortieMax),
+};
+const remplir = s => String(s || "").replace(/\{(\w+)\}/g, (t, k) => (MARQUES[k] !== undefined ? MARQUES[k] : t));
+for (const e of Q.ENTREES) { e.reponse = remplir(e.reponse); e.reserve = remplir(e.reserve); }
 pages.push({ id: "prevoyance", route: "prevoyance/#questions", titre: "Épargne et retraite", type: "table", flags: { nomodel: true }, tags: ["épargne", "retraite", "prévoyance", "111bis"], hash: hash(Q.ENTREES) });
 for (const e of Q.ENTREES) {
   const A = { ext: "prevoyance/#questions" };

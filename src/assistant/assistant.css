@@ -1,0 +1,55 @@
+::highlight(passage) { background: #ffe680; color: #111; }
+.passage-repli { outline: 3px solid #e0a800; outline-offset: 2px; }
+#widget-plein { display: none; }
+.demo-credit { font-size: 12px; opacity: .7; text-align: center; padding: 8px 16px 72px; margin: 0; }
+#vous-lisez { padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,.25); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+#vous-lisez .vl-titre { font-weight: 600; width: 100%; }
+#vous-lisez .vl-sous { width: 100%; opacity: .75; font-size: 12px; }
+#vous-lisez .chip, .carte .chip { font-size: 12px; padding: 3px 8px; border-radius: 12px; border: 1px solid rgba(128,128,128,.45); background: transparent; color: inherit; cursor: pointer; text-align: left; }
+.w-outils { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 4px 12px; font-size: 11px; opacity: .85; border-bottom: 1px solid rgba(128,128,128,.25); align-items: center; }
+.w-outils label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+.lien { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+.msg.carte { max-width: 100%; width: 100%; box-sizing: border-box; font-size: 14px; line-height: 1.4; }
+.carte .mot { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #0b6b3a; margin-bottom: 4px; }
+.statut-RIEN .mot, .statut-NE_CHIFFRE_PAS .mot, .statut-REPONSE_SANS .mot { color: #8a5a00; }
+.statut-DEUX_CHOSES .mot, .statut-CLARIFIER .mot { color: #7a3fa0; }
+.statut-REFUS .mot, .statut-PERSONNEL .mot, .statut-URGENCE .mot { color: #b3261e; }
+.statut-URGENCE .texte { font-size: 18px; font-weight: 700; }
+.carte .numero { float: right; font-weight: 700; opacity: .5; }
+.carte .titre { font-weight: 600; margin: 4px 0; }
+.carte .ailleurs, .carte .note, .carte .requete, .carte .complet, .carte .echo, .carte .chemin, .carte .annonce, .carte .libelle { font-size: 12px; margin: 4px 0; }
+.carte .ailleurs { font-weight: 600; }
+.carte .annonce { font-weight: 600; color: #8a5a00; }
+.carte .requete { font-family: ui-monospace, monospace; opacity: .8; }
+.carte .note { opacity: .85; }
+.carte .compte { font-size: 28px; font-weight: 700; margin: 2px 0; }
+.citation { margin: 6px 0; }
+.citation blockquote { margin: 0; padding: 4px 8px; border-left: 3px solid #0b6b3a; }
+.citation .source { font-size: 11px; opacity: .75; margin: 3px 0; }
+.btn-voir { display: inline-block; margin-top: 4px; font-size: 12px; padding: 3px 8px; border: 1px solid #0b6b3a; border-radius: 6px; background: transparent; color: inherit; cursor: pointer; text-decoration: none; }
+.carte table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0; }
+.carte td, .carte th { border-top: 1px solid rgba(128,128,128,.3); padding: 3px 4px; text-align: left; vertical-align: top; }
+.carte td.n { text-align: right; font-weight: 600; white-space: nowrap; }
+.carte tr.extrait td { font-size: 11px; opacity: .8; border-top: 0; padding-top: 0; }
+.carte .liste { margin: 4px 0; padding-left: 18px; font-size: 13px; }
+.carte .options { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.carte .chip.defaut { border-color: #0b6b3a; font-weight: 600; }
+.autour, .trace { margin-top: 8px; font-size: 12px; }
+.trace { border-top: 1px dashed rgba(128,128,128,.4); padding-top: 4px; }
+.trace > summary, .autour > summary { cursor: pointer; opacity: .8; }
+.lignes-trace { display: grid; gap: 2px; margin-top: 4px; }
+.tr-ligne { display: grid; grid-template-columns: 48px 90px 1fr; gap: 4px; align-items: baseline; font-size: 11px; }
+.tr-ligne .qui { font-weight: 700; }
+.tr-ligne .qui-modele { color: #7a3fa0; }
+.tr-ligne .qui-code { color: #0b6b3a; }
+.tr-ligne .etape { opacity: .85; }
+.tr-ligne .det { overflow-wrap: anywhere; }
+.tr-ligne .json { grid-column: 1 / -1; }
+.tr-ligne .json summary { cursor: pointer; opacity: .7; }
+.tr-ligne pre { max-height: 240px; overflow: auto; font-size: 10px; background: rgba(128,128,128,.1); padding: 6px; margin: 2px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+#revenir-reponse { position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 9999; padding: 8px 14px; border-radius: 20px; border: 0; background: #0b6b3a; color: #fff; font-weight: 600; }
+.attente { opacity: .7; font-style: italic; }
+@media (max-width: 1099px) {
+  #widget:not([hidden]) { position: fixed !important; inset: 0 !important; width: 100% !important; height: 100dvh !important; max-width: none !important; max-height: none !important; border-radius: 0 !important; z-index: 9000; display: flex; flex-direction: column; }
+  #widget-log { flex: 1; }
+}
