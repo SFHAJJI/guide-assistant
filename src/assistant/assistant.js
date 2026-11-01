@@ -15,11 +15,11 @@
     window.DICO_FINAL = dico;
     M = window.Moteur.creer(x, { DICO: dico, REFUS: window.REFUS, DECLARE: window.DECLARE, sim: window.SIM,
       paramsModifies: !!localStorage.getItem("luxguide.simulateur.params.v1"), get modele() { return modeleActif(); }, get vecteurs() { return vecteurs; } });
-    fetch("assistant/vecteurs.bin").then(r => (r.ok ? r.arrayBuffer() : null)).then(b => { if (b && b.byteLength === x.lignes.length * 256 * 4) vecteurs = new Float32Array(b); }).catch(() => {});
-    return M;
+    const charges = fetch("assistant/vecteurs.bin").then(r => (r.ok ? r.arrayBuffer() : null)).then(b => { if (b && b.byteLength === x.lignes.length * 256 * 4) vecteurs = new Float32Array(b); }).catch(() => {});
+    return Promise.race([charges, new Promise(r => setTimeout(r, 4000))]).then(() => M);
   });
   const modeleActif = () => (window.ASSISTANT_MODELE && !sansModele() ? window.ASSISTANT_MODELE : null);
-  const sansModele = () => localStorage.getItem("assistant.sansmodele") === "1" || new URLSearchParams(location.search).get("sans") === "1";
+  const sansModele = () => new URLSearchParams(location.search).get("sans") === "1";
 
   // ---------- D7: the page, read from the DOM ----------
   function pageCourante() {
@@ -169,8 +169,12 @@
   function trace(p) {
     const d = el("details", "trace");
     d.open = localStorage.getItem("assistant.trace") !== "0" && large();
-    const nb = p.trace.filter(t => t.qui === "modèle" && t.etape !== "Modèle non appelé").length;
-    d.appendChild(el("summary", null, `Comment j'ai trouvé · ${nb ? nb + " appel" + (nb > 1 ? "s" : "") + " au modèle" : "0 appel au modèle"}`));
+    const rangs = p.trace.filter(t => t.qui === "modèle" && t.etape !== "Modèle non appelé");
+    const perdu = t => /^pas de réponse/.test(t.detail || "");
+    const nb = rangs.reduce((s, t) => s + (perdu(t) ? 0 : t.appels ?? 1), 0);
+    const perdus = rangs.filter(perdu).length;
+    const pourquoi = perdus ? ` · ${perdus} sans réponse` : nb ? "" : modeleActif() ? " · le code a suffi" : " · modèle coupé";
+    d.appendChild(el("summary", null, `Comment j'ai trouvé · ${nb} appel${nb > 1 ? "s" : ""} au modèle${pourquoi}`));
     const ol = el("div", "lignes-trace");
     p.trace.forEach(t => {
       const r = el("div", "tr-ligne");
@@ -328,12 +332,9 @@
     const tr = el("label", null); const ci = el("input"); ci.type = "checkbox"; ci.checked = localStorage.getItem("assistant.trace") !== "0";
     ci.addEventListener("change", () => { localStorage.setItem("assistant.trace", ci.checked ? "1" : "0"); document.querySelectorAll("#widget-log details.trace").forEach(d => { d.open = ci.checked; }); });
     tr.append(ci, " Comment j'ai trouvé");
-    const sm = el("label", null); const cs = el("input"); cs.type = "checkbox"; cs.checked = sansModele();
-    cs.addEventListener("change", () => localStorage.setItem("assistant.sansmodele", cs.checked ? "1" : "0"));
-    sm.append(cs, " Sans modèle");
     const dl = el("button", "lien", "Mes questions (CSV)"); dl.addEventListener("click", exporterSession);
     const mach = el("a", "lien", "La mécanique"); mach.href = "../machine/";
-    outils.append(tr, sm, dl, mach);
+    outils.append(tr, dl, mach);
     log.parentNode.insertBefore(outils, log);
     window.addEventListener("hashchange", () => setTimeout(majEntete, 120));
     document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#g-tabs, .g-tab, #mrh-tabs, #sim-tabs, #widget-btn")) setTimeout(majEntete, 80); });

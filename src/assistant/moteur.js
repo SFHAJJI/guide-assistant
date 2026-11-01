@@ -579,7 +579,7 @@
             if (arbitre.conflit) {
               const prim = (arbitre.roles || []).filter(x => x.role === "primary").map(x => cands.find(y => y.l.id === x.id)).filter(Boolean);
               if (prim.length >= 2) {
-                T.push({ qui: "modèle", etape: "Désaccord dans le guide", detail: "signalé par l'arbitre, à relire" });
+                T.push({ qui: "modèle", appels: 0, etape: "Désaccord dans le guide", detail: "signalé par l'arbitre, à relire" });
                 return { statut: "DEUX_CHOSES", lignes: prim.slice(0, 2).map(x => vue(x.l)), sources: prim.slice(0, 2).map(x => source(x.l)), parModele: true, note: ["Ce désaccord est signalé par le modèle, je ne l'ai pas déclaré après lecture."] };
               }
             }
@@ -614,7 +614,7 @@
           const contexte = autour(c.l).slice(0, 6).map(y => ({ id: y.id, t: y.t }));
           const a = await modele.lire(row, contexte);
           const b = a && a.label !== "inconnu" ? await modele.relire(row, contexte) : null;
-          T.push({ qui: "modèle", etape: "Lecture oui/non", detail: a ? `première lecture : ${a.label}${b ? ", seconde lecture : " + b.label : ""}` : "pas de réponse", json: { a, b } });
+          T.push({ qui: "modèle", appels: (a ? 1 : 0) + (b ? 1 : 0), etape: "Lecture oui/non", detail: a ? `première lecture : ${a.label}${b ? ", seconde lecture : " + b.label : ""}` : "pas de réponse", json: { a, b } });
           if (a && b && a.label === b.label) { label = a.label; conditions = (a.conditions || []).filter(id => contexte.some(y => y.id === id)); }
           else if (a && b) T.push({ qui: "code", etape: "Désaccord", detail: "pas d'étiquette, la règle seule" });
         }
