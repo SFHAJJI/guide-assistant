@@ -341,6 +341,28 @@
     });
   }
 
-  window.ASSISTANT = { envoyer, atteindre, localiser, voir, pageCourante, pret };
+  // For the measurements in CI: the same engine, without drawing cards.
+  const moteurs = {};
+  const optionsMode = m => ({ DICO: m === "sans_dico" ? [] : window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE, sim: window.SIM, modele: m === "complet" ? window.ASSISTANT_MODELE : null });
+  const propre = o => JSON.parse(JSON.stringify(o, (k, v) => (k === "trace" || k === "row" || k === "autour" ? undefined : v)));
+  async function evaluer(q, pageId, mode) {
+    if (mode === "origine") {
+      const r = await window.CHAT.repondre(q, window.CHAT.profilVide(), []);
+      const refus = /ne trouve pas|n'ai pas|pas d'information|ne sais pas|ne couvre pas|reformuler/i.test(r.texte || "");
+      return { parts: [{ statut: refus ? "RIEN" : "REPONSE", lignes: [{ t: r.texte || "" }] }] };
+    }
+    if (mode === "naif") {
+      const mots = window.Moteur.plain(q).split(/[^a-z0-9]+/).filter(w => w.length > 3);
+      let best = null, bs = 0;
+      for (const l of index.lignes) { const t = window.Moteur.plain(l.t); let s = 0; for (const w of mots) if (t.includes(w)) s++; if (s > bs) { bs = s; best = l; } }
+      return { parts: [{ statut: "REPONSE", lignes: best ? [{ t: best.t }] : [{ t: "" }] }] };
+    }
+    moteurs[mode] = moteurs[mode] || window.Moteur.creer(JSON.parse(JSON.stringify(index)), optionsMode(mode));
+    const p = pageId && mode !== "sans_page" ? index.pages.find(x => x.id === pageId) : null;
+    try { return propre(await moteurs[mode].repondre(q, { page: p ? { id: p.id, titre: p.titre } : null })); }
+    catch (e) { return { parts: [{ statut: "ERREUR", texte: e.message }] }; }
+  }
+
+  window.ASSISTANT = { envoyer, atteindre, localiser, voir, pageCourante, pret, evaluer, pages: () => index.pages.map(p => ({ id: p.id })), journalModele: () => window.ASSISTANT_MODELE ? window.ASSISTANT_MODELE.journal : [] };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", installer); else installer();
 })();
