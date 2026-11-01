@@ -367,6 +367,6 @@
     catch (e) { return { parts: [{ statut: "ERREUR", texte: e.message }] }; }
   }
 
-  window.ASSISTANT = { envoyer, atteindre, localiser, voir, pageCourante, pret, evaluer, pages: () => index.pages.map(p => ({ id: p.id })), juger: (q, a, m) => window.ASSISTANT_MODELE.juger(q, a, m), journalModele: () => window.ASSISTANT_MODELE ? window.ASSISTANT_MODELE.journal : [] };
+  window.ASSISTANT = { envoyer, atteindre, localiser, voir, pageCourante, pret, evaluer, pages: () => index.pages.map(p => ({ id: p.id })), juger: (q, a, m) => window.ASSISTANT_MODELE.juger(q, a, m), journalModele: () => (window.ASSISTANT_MODELE ? window.ASSISTANT_MODELE.journal.filter(x => x.nom !== "juger") : []) };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", installer); else installer();
 })();
