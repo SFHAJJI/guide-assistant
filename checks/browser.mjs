@@ -83,6 +83,32 @@ for (const [nom, qs, attendu] of J) {
   await p2.screenshot({ path: `shots/${nom}.png` });
   await p2.close();
 }
+for (const [nom, qs, attendu] of [["bougie", "?q=Un%20assur%C3%A9%20laisse%20une%20bougie%20sur%20la%20table%20de%20son%20jardin%20pendant%20ses%20vacances.%20Avec%20la%20chaleur%2C%20la%20bougie%20fond%20et%20ab%C3%AEme%20la%20table.%20Est-ce%20couvert%20%3F", "RIEN DANS LE GUIDE SOUS CES MOTS"], ["sans-modele", "?sans=1&q=combien%20de%20caution%20et%20c%27est%20quoi%20le%20matricule%20%3F", "Deux questions"]]) {
+  const p2 = await ctx.newPage();
+  await p2.goto(`${BASE}/guide/${qs}`, { waitUntil: "load" });
+  await p2.waitForTimeout(800);
+  await p2.waitForFunction(() => !document.querySelector("#widget-log .attente"), null, { timeout: 45000 }).catch(() => {});
+  const txt = await p2.evaluate(() => document.querySelector("#widget-log")?.textContent || "");
+  check(`journey ${nom}`, txt.includes(attendu), txt.slice(0, 70));
+  await p2.close();
+}
+const porte = await ctx.newPage();
+porte.on("pageerror", e => fails.push("door pageerror: " + e.message));
+await porte.goto(`${BASE}/`, { waitUntil: "load" });
+await porte.waitForTimeout(300);
+check("entry page has nine buttons", (await porte.locator("a.essai").count()) === 9);
+await porte.screenshot({ path: "shots/porte.png" });
+await porte.close();
+for (const [ancre, attendu] of [["parsing", "Une page et ses lignes"], ["aiguillage", "Les appels au modèle"], ["mesures", "erreurs affirmées"], ["limites", "Rien dans le guide"]]) {
+  const pm = await ctx.newPage();
+  pm.on("pageerror", e => fails.push(`machine ${ancre} pageerror: ${e.message}`));
+  await pm.goto(`${BASE}/machine/#${ancre}`, { waitUntil: "load" });
+  await pm.waitForTimeout(1500);
+  const texte = await pm.evaluate(() => document.querySelector("#vue").textContent);
+  check(`machine tab ${ancre}`, texte.includes(attendu), texte.slice(0, 60));
+  await pm.screenshot({ path: `shots/machine-${ancre}.png` });
+  await pm.close();
+}
 // "Voir sur la page" really marks the passage, and the page says where we are.
 const p3 = await ctx.newPage();
 await p3.goto(`${BASE}/guide/?q=combien%20coutent%20les%20plaques%20%3F&p=fiche/vehicule&c=g-tab-couts`, { waitUntil: "load" });

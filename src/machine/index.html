@@ -72,7 +72,7 @@ function parsing() {
   vue.appendChild(el("h2", null, "Le dictionnaire"));
   vue.appendChild(el("p", "note", "Les mots-clés de l'auteur, plus mes synonymes. Personne ne l'a encore validé : l'expert, c'est l'auteur du guide. Une correction de sa part est une ligne de plus."));
   const dico = el("div", "bas");
-  dico.appendChild(table(M.concepts.filter(c => c.source === "moi").map(c => ({ concept: c.id, source: c.source, pages: (c.pages || [c.tool]).join(", "), mots: c.mots.join(", ") })), ["concept", "source", "pages", "mots"]));
+  dico.appendChild(table(M.concepts.filter(c => c.source === "moi").map(c => ({ concept: c.id, source: c.source, pages: (c.pages || [c.tool]).join(", "), mots: c.mots.filter(m => !m.startsWith("__")).slice(0, 14).join(", ") })), ["concept", "source", "pages", "mots"]));
   vue.appendChild(dico);
   vue.appendChild(el("h2", null, "Conflits déclarés"));
   vue.appendChild(table((DECLARE_LIGNES()), ["kind", "id", "ligne_a", "ligne_b"]));
@@ -134,14 +134,17 @@ function limites() {
 
 function aller(n) {
   [...document.querySelectorAll("#tabs button")].forEach(b => b.classList.toggle("on", b.textContent === n));
+  history.replaceState(null, "", "#" + n.toLowerCase());
   TABS[n]();
 }
+const depuisAdresse = () => Object.keys(TABS).find(n => "#" + n.toLowerCase() === location.hash) || "Parsing";
+window.addEventListener("hashchange", () => { if (X) aller(depuisAdresse()); });
 const nav = document.getElementById("tabs");
 Object.keys(TABS).forEach(n => { const b = el("button", null, n); b.addEventListener("click", () => aller(n)); nav.appendChild(b); });
 fetch("../guide/assistant/index.json").then(r => r.json()).then(x => {
   X = x;
   M = window.Moteur.creer(JSON.parse(JSON.stringify(x)), { DICO: window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE });
-  aller("Parsing");
+  aller(depuisAdresse());
 });
 </script>
 </body>
