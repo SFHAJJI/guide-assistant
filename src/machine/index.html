@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>La mécanique de l'assistant</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.45 system-ui, sans-serif; margin: 0; padding: 20px; }
+  h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 17px; margin: 18px 0 6px; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+  nav button { padding: 6px 12px; border: 1px solid rgba(128,128,128,.5); background: transparent; color: inherit; border-radius: 6px; cursor: pointer; }
+  nav button.on { border-color: #0b6b3a; font-weight: 700; }
+  table { border-collapse: collapse; font-size: 13px; width: 100%; }
+  td, th { border-top: 1px solid rgba(128,128,128,.3); padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { position: sticky; top: 0; background: Canvas; cursor: pointer; }
+  .cote { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cote > div { min-width: 0; max-height: 70vh; overflow: auto; border: 1px solid rgba(128,128,128,.3); padding: 8px; }
+  .doc p { margin: 0 0 6px; } .doc h3 { margin: 8px 0 4px; font-size: 14px; }
+  .mono { font-family: ui-monospace, monospace; font-size: 12px; }
+  .note { font-size: 13px; opacity: .85; max-width: 760px; }
+  select, input { font: inherit; padding: 3px; }
+  .bas { max-height: 62vh; overflow: auto; }
+  tr.sel td { background: rgba(255,230,128,.35); }
+  @media (max-width: 800px) { .cote { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<h1>La mécanique de l'assistant</h1>
+<p class="note">Le modèle comprend la question. Le guide donne la réponse. Le code calcule et décide. <a href="../guide/">Ouvrir le guide</a>. La trace complète de chaque réponse, avec le JSON de chaque étape, est sous la réponse.</p>
+<nav id="tabs"></nav>
+<main id="vue"></main>
+<script src="../guide/assistant/dico.js"></script>
+<script src="../guide/assistant/declare.js"></script>
+<script src="../guide/assistant/moteur.js"></script>
+<script>
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+const vue = document.getElementById("vue");
+let X, M;
+const TABS = { "Parsing": parsing, "Aiguillage": aiguillage, "Mesures": mesures, "Limites": limites };
+
+function table(rows, cols) {
+  const t = el("table"); const h = el("tr");
+  cols.forEach(c => h.appendChild(el("th", null, c))); t.appendChild(h);
+  rows.forEach(r => { const tr = el("tr"); cols.forEach(c => { const v = r[c]; tr.appendChild(el("td", null, v == null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v))); }); t.appendChild(tr); });
+  return t;
+}
+
+function parsing() {
+  vue.innerHTML = "";
+  const s = X.stats;
+  vue.appendChild(el("p", "note", `Le guide est lu une fois, comme des données, sans exécuter son code : ${s.pages} pages, ${s.lignes} lignes, ${s.rangees} rangées de tableaux, ${s.faq} questions fréquentes, ${s.verdicts} sinistres × 4 contrats, ${s.parcours} étapes dont ${s.parcours_si} conditionnelles, ${s.cartes} cartes. Version du guide : ${s.commit}. Ensuite, tout se passe sur ces tables.`));
+  const choix = el("select");
+  X.pages.filter(p => p.type !== "panneau").forEach(p => { const o = el("option", null, p.titre); o.value = p.id; choix.appendChild(o); });
+  const lab = el("label", null, "Une page et ses lignes : "); lab.appendChild(choix); vue.appendChild(lab);
+  const cote = el("div", "cote"); const g = el("div", "doc"), d = el("div"); cote.append(g, d); vue.appendChild(cote);
+  function montrer() {
+    const ls = X.lignes.filter(l => l.p === choix.value);
+    g.innerHTML = ""; d.innerHTML = "";
+    g.appendChild(el("h3", null, "Le texte, tel que le lit le lecteur"));
+    let sec = null;
+    ls.forEach(l => { if (l.s !== sec) { sec = l.s; g.appendChild(el("h3", null, sec)); } if (l.k !== "titre") g.appendChild(el("p", null, l.t)); });
+    d.appendChild(el("h3", null, "Les mêmes lignes dans la table"));
+    d.appendChild(table(ls.map(l => ({ id: l.id, type: l.k, section: l.s, registre: l.r, méthode: l.m, texte: l.t, adresse: X.addrs[l.a].r + (X.addrs[l.a].c ? " + clics" : "") })), ["id", "type", "section", "registre", "méthode", "texte", "adresse"]));
+  }
+  choix.addEventListener("change", montrer); choix.value = "vehicule"; montrer();
+  vue.appendChild(el("h2", null, "Les tables, en CSV"));
+  const liens = el("p");
+  ["pages", "plan", "lignes", "rangees", "faq", "parcours", "renvois"].forEach(n => { const a = el("a", null, n + ".csv"); a.href = `../guide/assistant/tables/${n}.csv`; liens.append(a, " · "); });
+  vue.appendChild(liens);
+  vue.appendChild(el("h2", null, "Le dictionnaire"));
+  vue.appendChild(el("p", "note", "Les mots-clés de l'auteur, plus mes synonymes. Personne ne l'a encore validé : l'expert, c'est l'auteur du guide. Une correction de sa part est une ligne de plus."));
+  const dico = el("div", "bas");
+  dico.appendChild(table(M.concepts.filter(c => c.source === "moi").map(c => ({ concept: c.id, source: c.source, pages: (c.pages || [c.tool]).join(", "), mots: c.mots.join(", ") })), ["concept", "source", "pages", "mots"]));
+  vue.appendChild(dico);
+  vue.appendChild(el("h2", null, "Conflits déclarés"));
+  vue.appendChild(table((DECLARE_LIGNES()), ["kind", "id", "ligne_a", "ligne_b"]));
+  fetch("adresses.json").then(r => r.ok ? r.json() : null).then(a => {
+    if (!a) return;
+    vue.appendChild(el("h2", null, "Chaque ligne est-elle atteignable sur la vraie page ?"));
+    vue.appendChild(el("p", "note", `Vérifié dans un vrai navigateur : ${a.trouves} lignes sur ${a.vus} (micro ${(a.micro * 100).toFixed(1)} %, macro ${(a.macro * 100).toFixed(1)} %). La section épargne est exclue : ses pages restent intactes et n'ont pas d'adresse par entrée.`));
+    vue.appendChild(table(Object.entries(a.manquants).map(([p, v]) => ({ page: p, manquantes: v.length })), ["page", "manquantes"]));
+  });
+}
+const DECLARE_LIGNES = () => [
+  ...window.DECLARE.conflits.map(c => ({ kind: "conflit réel", id: c.id, ligne_a: `${c.lignes[0].p} : ${c.lignes[0].c}`, ligne_b: `${c.lignes[1].p} : ${c.lignes[1].c}` })),
+  ...window.DECLARE.conditions.map(c => ({ kind: "tranché par un fait : " + c.fait, id: c.id, ligne_a: c.valeurs.ue.ligne.c, ligne_b: c.valeurs.tiers.ligne.c })),
+  ...window.DECLARE.homonymes.map(h => ({ kind: "homonyme", id: h.valeur, ligne_a: h.sens[0].c, ligne_b: "" })),
+  ...window.DECLARE.valeurs.map(v => ({ kind: "annoncé", id: v.id, ligne_a: "appliqué : " + v.en_vigueur, ligne_b: "annoncé : " + v.annonce })),
+];
+
+async function aiguillage() {
+  vue.innerHTML = "";
+  vue.appendChild(el("p", "note", "Une seule fonction, decide(), décide de la route. Le modèle n'y entre jamais. Chaque règle a son test."));
+  const m = await fetch("mesures.json").then(r => r.ok ? r.json() : null).catch(() => null);
+  vue.appendChild(table(M.REGLES.map(r => ({ règle: r[0], condition: r[1], route: r[2], "questions de test": m?.regles?.[r[0]] ?? "" })), ["règle", "condition", "route", "questions de test"]));
+  vue.appendChild(el("h2", null, "Les appels au modèle"));
+  vue.appendChild(table([
+    { appel: "parse", quand: "aucun concept trouvé par le code", rend: "des identifiants de concepts d'une liste fermée, une forme, un type, des termes de recherche", "si échec": "la ligne du code, et la trace le dit" },
+    { appel: "arbitre", quand: "marge plate, 6 candidats au plus", rend: "un identifiant et une raison", "si échec": "la meilleure ligne du code, signalée non arbitrée" },
+    { appel: "lire", quand: "question oui/non, sur la ligne de la règle", rend: "oui, non ou ça dépend, avec les identifiants des lignes", "si échec": "la règle seule, sans étiquette" },
+    { appel: "seconde lecture", quand: "seulement si une étiquette oui/non va s'afficher", rend: "son propre oui, non ou ça dépend, sans voir le premier", "si échec": "désaccord : la règle seule" },
+  ], ["appel", "quand", "rend", "si échec"]));
+  vue.appendChild(el("p", "note", "Le modèle n'écrit jamais la phrase de la réponse. Il écrit trois autres choses, marquées comme telles : des termes de recherche, une raison dans la trace, une traduction à côté du français."));
+}
+
+async function mesures() {
+  vue.innerHTML = "";
+  const m = await fetch("mesures.json").then(r => r.ok ? r.json() : null).catch(() => null);
+  if (!m) { vue.appendChild(el("p", "note", "Mesures en cours.")); return; }
+  vue.appendChild(el("p", "note", `${m.n} questions, version ${m.commit}, ${m.date}. Réponses justes et erreurs affirmées vont par paire : refuser tout donnerait zéro erreur. Un pourcentage n'apparaît qu'à partir de 20 questions.`));
+  vue.appendChild(table(m.tranches, m.colonnes));
+  if (m.notes) m.notes.forEach(n => vue.appendChild(el("p", "note", n)));
+}
+
+function limites() {
+  vue.innerHTML = "";
+  [
+    "Mon choix de fond : la thèse de la série s'adresse à un expert qui vérifie, et exclut le grand public. Un nouvel arrivant ne peut pas vérifier. Donc les questions sont bornées au guide, et la phrase affichée n'est jamais écrite par le modèle.",
+    "« Rien dans le guide sous ces mots » n'est pas une preuve d'absence. Mon dictionnaire n'a été validé par personne.",
+    "Les conflits sont ceux que j'ai déclarés après avoir lu les deux lignes. Un conflit non déclaré passe.",
+    "Les cartes, les lignes de transport et les aires de jeux ne sont pas lues : l'assistant envoie vers l'outil et le dit. Les valeurs manquantes sont comptées à part, jamais lues comme non.",
+    "La section épargne reste intacte : pas de surlignage, pas de modèle sur ses lignes.",
+    "Les comparaisons de contrats portent sur des extraits de quatre contrats anonymisés. Elles ne disent rien du contrat du lecteur et ne classent personne.",
+    "Les questions de test viennent d'un autre auteur et n'ont pas été relues : les erreurs d'étiquette sont comptées à part. La couverture par famille n'a pas été confirmée. Les deux auteurs peuvent partager les mêmes angles morts.",
+    "Copie du guide à une version figée : ses dates sont celles de cette version.",
+  ].forEach(t => vue.appendChild(el("p", "note", t)));
+}
+
+function aller(n) {
+  [...document.querySelectorAll("#tabs button")].forEach(b => b.classList.toggle("on", b.textContent === n));
+  TABS[n]();
+}
+const nav = document.getElementById("tabs");
+Object.keys(TABS).forEach(n => { const b = el("button", null, n); b.addEventListener("click", () => aller(n)); nav.appendChild(b); });
+fetch("../guide/assistant/index.json").then(r => r.json()).then(x => {
+  X = x;
+  M = window.Moteur.creer(JSON.parse(JSON.stringify(x)), { DICO: window.DICO, REFUS: window.REFUS, DECLARE: window.DECLARE });
+  aller("Parsing");
+});
+</script>
+</body>
+</html>
